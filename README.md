@@ -1,6 +1,8 @@
 # Rango 🦀🦎
 
-<img src="rango.png" alt="Rango Logo" width="300">
+<p align="center">
+    <img src="rango.png" alt="Rango Logo" width="900">
+</p>
 
 > Build blazing-fast web applications with zero compromise on developer velocity.
 

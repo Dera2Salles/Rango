@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "rango",
+    "macros",
+    "rango_cli",
+]
+resolver = "2"

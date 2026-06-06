@@ -16,7 +16,7 @@ pub async fn init_db(database_url: &str) -> Result<(), sqlx::Error> {
 
 #[cfg(feature = "db")]
 pub fn db() -> &'static Pool<sqlx::Any> {
-    DB_POOL.get().expect("DB non initialisée — appelle init_db() dans main()")
+    DB_POOL.get().expect("DB not initialized — call init_db() in main()")
 }
 
 #[cfg(feature = "db")]

@@ -1,26 +1,28 @@
-use std::sync::{Arc. OncLock};
+use std::sync::{Arc, OnceLock};
 
-pub trait RangoState : Clone + Send + Sync + 'static{}
+pub trait RangoState: Clone + Send + Sync + 'static {}
 
 #[derive(Clone)]
-pub struct StateWrapper<S : RangoState>{
-    pub inner : Arc<S>
+pub struct StateWrapper<S: RangoState> {
+    pub inner: Arc<S>,
 }
 
-impl<S : RangoState> StateWrapper<S>{
-    pub fn new(state : S)-> Self{
-        StateWrapper{ inner : Arc::new(state)}
+impl<S: RangoState> StateWrapper<S> {
+    pub fn new(state: S) -> Self {
+        StateWrapper {
+            inner: Arc::new(state),
+        }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct RangoConfig {
-    pub debug : bool,
-    pub allowed_hosts : Vec<String>,
-    pub templates_dir : String,
-    pub static_dir : Option<String>,
-    pub database_url : Option<String>,
-    pub secret_key : String,
+    pub debug: bool,
+    pub allowed_hosts: Vec<String>,
+    pub templates_dir: String,
+    pub static_dir: Option<String>,
+    pub database_url: Option<String>,
+    pub secret_key: String,
 }
 
 impl Default for RangoConfig {
@@ -39,7 +41,9 @@ impl Default for RangoConfig {
 static RANGO_CONFIG: OnceLock<RangoConfig> = OnceLock::new();
 
 pub fn init_config(config: RangoConfig) {
-    RANGO_CONFIG.set(config).expect("RangoConfig déjà initialisé");
+    RANGO_CONFIG
+        .set(config)
+        .expect("RangoConfig already initialized");
 }
 
 pub fn config() -> &'static RangoConfig {

@@ -21,7 +21,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rango = {{ git = "https://github.com/Dera2Salles/Rango" }}
+rango-framework = {{ git = "https://github.com/Dera2Salles/Rango" }}
 serde_json = "1.0"
 tokio = {{ version = "1.0", features = ["full"] }}
 "#,
@@ -91,7 +91,7 @@ pub async fn home() {
     fs::write(format!("{}/templates/base.html", name), base_html)
         .map_err(RangoCliError::IoError)?;
 
-    println!("✅ Project '{}' created !", name);
+    println!(" Project '{}' created !", name);
     println!("   cd {}", name);
     println!("   cargo run");
 

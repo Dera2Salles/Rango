@@ -9,8 +9,8 @@ static DB_POOL: OnceLock<Pool<sqlx::Any>> = OnceLock::new();
 pub async fn init_db(database_url: &str) -> Result<(), sqlx::Error> {
     sqlx::any::install_default_drivers();
     let pool = sqlx::AnyPool::connect(database_url).await?;
-    DB_POOL.set(pool).expect("DB pool déjà initialisé");
-    tracing::info!("🗄️  Rango DB connecté : {}", database_url);
+    DB_POOL.set(pool).expect("DB pool already initialized");
+    tracing::info!("🗄️  Rango DB connected : {}", database_url);
     Ok(())
 }
 
@@ -54,6 +54,6 @@ pub async fn run_migrations(migrations_path: &str) -> Result<(), sqlx::Error> {
     use std::path::Path;
     let migrator = Migrator::new(Path::new(migrations_path)).await?;
     migrator.run(db()).await?;
-    tracing::info!("✅ Migrations appliquées depuis {}", migrations_path);
+    tracing::info!("✅ Migrations applied from {}", migrations_path);
     Ok(())
 }

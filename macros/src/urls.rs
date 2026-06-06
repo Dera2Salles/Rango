@@ -1,24 +1,10 @@
-use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{
-    parse::{Parse, ParseStream},
-    parse_macro_input,
-    punctuated::Punctuated,
-    Ident, ItemFn, ListStr, Result, Token,
-};
+use syn::{Ident, LitStr, parse::{Parse, ParseStream}, Token, Result};
 
-struct RouteEntry {
+pub struct RouteEntry {
     path: LitStr,
     view_path: syn::Path,
-}
-
-enum UrlItem {
-    Route(RouteEntry),
-    Include(LitStr, syn::Path),
-}
-
-struct UrlsInput {
-    item: Vec<UrlItem>,
 }
 
 impl Parse for RouteEntry {
@@ -30,33 +16,49 @@ impl Parse for RouteEntry {
     }
 }
 
+pub enum UrlItem {
+    Route(RouteEntry),
+    Include(LitStr, syn::Path),
+}
+
 impl Parse for UrlItem {
     fn parse(input: ParseStream) -> Result<Self> {
-        let keyword: Ident = input.parse()?;
+        let kw: Ident = input.parse()?;
         let content;
         syn::parenthesized!(content in input);
 
-        if keyword == "path" {
+        if kw == "path" {
             let route: RouteEntry = content.parse()?;
             Ok(UrlItem::Route(route))
-        } else if keyword == "include" {
+        } else if kw == "include" {
             let prefix: LitStr = content.parse()?;
             content.parse::<Token![,]>()?;
-            let route_fn: syn::Path = content.parse()?;
-            Ok(UrlItem::include(prefix, router_fn))
+            let router_fn: syn::Path = content.parse()?;
+            Ok(UrlItem::Include(prefix, router_fn))
         } else {
-            Err(syn::Error::new(
-                keyword.span(),
-                "attendu `path` ou `include`",
-            ))
+            Err(syn::Error::new(kw.span(), "attendu `path` ou `include`"))
         }
     }
 }
 
-#[proc_macro]
-pub fn urls(input: TokenStream) -> TokenStream {
-    let parsed = parse_macro_input!(input as RangoUrlsInput);
+pub struct RangoUrlsInput {
+    pub items: Vec<UrlItem>,
+}
 
+impl Parse for RangoUrlsInput {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let mut items = Vec::new();
+        while !input.is_empty() {
+            items.push(input.parse()?);
+            if input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
+            }
+        }
+        Ok(RangoUrlsInput { items })
+    }
+}
+
+pub fn expand_rango_urls(parsed: RangoUrlsInput) -> TokenStream2 {
     let mut registrations = Vec::new();
 
     for item in parsed.items {
@@ -79,12 +81,11 @@ pub fn urls(input: TokenStream) -> TokenStream {
         }
     }
 
-    let expanded = quote! {
+    quote! {
         pub fn get_rango_router() -> ::rango::axum::Router {
             let mut router = ::rango::axum::Router::new();
             #(#registrations)*
             router
         }
-    };
-    TokenStream::from(expanded)
+    }
 }

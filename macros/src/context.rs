@@ -1,10 +1,6 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{
-    parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    Ident, Result, Token,
-};
+use syn::{Ident, Token, parse::{Parse, ParseStream}, Result, punctuated::Punctuated};
 
 pub struct ContextEntry {
     key: Ident,

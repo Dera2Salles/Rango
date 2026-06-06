@@ -16,18 +16,35 @@ pub fn startproject(name: &str) -> Result<(), RangoCliError> {
 
     let cargo_toml = format!(
         r#"[package]
-    name = "{}"
-    version = "0.1.0"
-    edition = "2021"
+name = "{}"
+version = "0.1.0"
+edition = "2021"
 
-    [dependencies]
-    rango = {{ git = "https://github.com/Dera2Salles/Rango" }}
-    serde_json = "1.0"
-    tokio = {{ version = "1.0", features = ["full"] }}
-    "#,
+[dependencies]
+rango = {{ git = "https://github.com/Dera2Salles/Rango" }}
+serde_json = "1.0"
+tokio = {{ version = "1.0", features = ["full"] }}
+"#,
         name
     );
     fs::write(format!("{}/Cargo.toml", name), cargo_toml).map_err(RangoCliError::IoError)?;
+
+    let gitignore = r#"/target
+**/*.rs.bk
+Cargo.lock
+
+# Environnement
+.env
+.env.local
+"#;
+    fs::write(format!("{}/.gitignore", name), gitignore).map_err(RangoCliError::IoError)?;
+
+    let env_example = r#"# Rango Framework Configuration
+RANGO_ADDR=127.0.0.1:8000
+DATABASE_URL=sqlite://rango.db
+RUST_LOG=rango=debug,tower_http=debug
+"#;
+    fs::write(format!("{}/.env.example", name), env_example).map_err(RangoCliError::IoError)?;
 
     let main_rs = r#"mod urls;
 

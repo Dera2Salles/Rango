@@ -2,6 +2,12 @@
 name = "rango"
 version = "0.1.0"
 edition = "2021"
+ 
+authors = ["Marie Martinot De Salles DERANDRAINY"]
+description = "A powerful, Django-like async web framework built on top of Axum and Tokio."
+homepage = "https://github.com/Dera2Salles/Rango"
+repository = "https://github.com/Dera2Salles/Rango"
+license = "MIT"
 
 [features]
 default = ["templates"]

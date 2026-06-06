@@ -3,9 +3,16 @@ name = "rango_cli"
 version = "0.1.0"
 edition = "2021"
 
+authors = ["Marie Martinot De Salles DERANDRAINY"]
+description = "A powerful, Django-like async web framework CLI for Rust."
+homepage = "https://github.com/Dera2Salles/Rango"
+repository = "https://github.com/Dera2Salles/Rango"
+license = "MIT"
+
 [[bin]]
 name = "rango"
 path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }
+rango = { path = "../rango" }

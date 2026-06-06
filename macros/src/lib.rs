@@ -10,7 +10,6 @@ pub fn view(attr: TokenStream, item: TokenStream) -> TokenStream {
     let view_attr = parse_macro_input!(attr as view::ViewAttr);
     let input_fn = parse_macro_input!(item as ItemFn);
 
-    // On appelle la logique de view.rs et on convertit proc_macro2 -> proc_macro
     TokenStream::from(view::expand_view(view_attr, input_fn))
 }
 

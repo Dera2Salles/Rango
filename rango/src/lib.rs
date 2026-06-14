@@ -2,6 +2,9 @@ pub mod error;
 pub mod responses;
 pub mod state;
 pub mod middleware;
+mod debug;
+mod default;
+
 
 #[cfg(feature = "db")]
 pub mod db;
@@ -35,8 +38,11 @@ pub use axum::{
 pub use axum;
 pub use serde_json::json;
 
+use axum::middleware::from_fn;
 use axum::Router;
 use tower_http::trace::TraceLayer;
+
+use crate::default::default_404_handler;
 
 pub struct RangoBuilder {
     router: Router,
@@ -90,14 +96,21 @@ impl RangoBuilder {
         }
 
         self.router = self.router
-            .layer(axum::middleware::from_fn(middleware::logger_middleware))
+            .layer(from_fn(middleware::logger_middleware))
             .layer(TraceLayer::new_for_http());
+
+        self.router = self.router.fallback(default_404_handler);
+        
+        if config().debug {
+            println!("🛠️  Rango Debugger enabled");
+            self.router = self.router.layer(from_fn(crate::debug::debug_error_middleware));
+        }
 
         let listener = tokio::net::TcpListener::bind(&self.addr)
             .await
-            .unwrap_or_else(|e| panic!("Rango impossible de démarrer sur {} : {}", self.addr, e));
+            .unwrap_or_else(|e| panic!("Cannot run Rango on {} : {}", self.addr, e));
 
-        println!("🤠 Rango lancé sur http://{}", self.addr);
+        println!("🤠 Rango running on http://{}", self.addr);
 
         axum::serve(listener, self.router).await.unwrap();
     }

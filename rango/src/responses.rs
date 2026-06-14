@@ -8,7 +8,9 @@ use crate::error::RangoError;
 #[cfg(feature = "templates")]
 fn build_env() -> Environment<'static> {
     let mut env = Environment::new();
-    env.set_loader(minijinja::path_loader("templates"));
+    env.set_loader(minijinja::path_loader(
+        &crate::state::config().templates_dir,
+    ));
     env
 }
 
@@ -18,7 +20,7 @@ pub fn render(template_name: &str, context: serde_json::Value) -> Result<Respons
 
     let tmpl = env
         .get_template(template_name)
-        .map_err(|_| RangoError::TemplateNotFound(template_name.to_string()))?;
+        .map_err(|e| RangoError::TemplateNotFound(format!("{}: {}", template_name, e)))?;
 
     let html = tmpl
         .render(context)

@@ -12,7 +12,7 @@ Rango is a lightweight, ergonomic web framework built on top of Axum. It is care
 
 ## ⚡ Key Features
 
-- **Django-Inspired Routing 🛤️**: Centralize your URLs in a single, clean file using the `rango_urls!` macro. Support for nested sub-routers via `include` and `path`.
+- **Django-Inspired Routing 🛤️**: Centralize your URLs in a single, clean file using the `urls!` macro. Support for nested sub-routers via `include` and `path`.
 - **Simplified View Handling 👁️**: Write clean, asynchronous handlers using `#[view]` attributes. Let Rango manage the underlying Axum routing plumbing.
 - **On-Demand Database Support 🗄️**: Seamless database integration with compile-time query validation, completely optional and feature-gated.
 - **Ergonomic Contexts 🧪**: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
@@ -25,7 +25,7 @@ Rango is a lightweight, ergonomic web framework built on top of Axum. It is care
 ```text
 rango_workspace/
 ├── rango/           # Core framework library (State, Middleware, Responses)
-├── macros/          # Procedural macros (view, rango_urls, context)
+├── macros/          # Procedural macros (view, urls, context)
 ├── rango_cli/       # CLI tool for scaffolding projects and apps
 └── docs/            # Documentation assets
 ```
@@ -79,10 +79,10 @@ cargo install --path rango_cli
 Define your application's URL structure in `src/urls.rs`. Rango supports nesting routes just like Django's `include`.
 
 ```rust
-use rango::macros::{rango_urls, view};
+use rango::macros::{urls, view};
 use crate::{blog, api};
 
-rango_urls!(
+urls!(
     path("/", home_view),
     include("/blog", blog::urls::get_rango_router),
     include("/api", api::urls::get_rango_router),

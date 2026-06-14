@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rango — {status_code} {message}</title>
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            :root {
+                --orange: #f97316;
+                --orange-dark: #c2410c;
+                --orange-light: #fff7ed;
+                --orange-mid: #ffedd5;
+                --orange-border: #fed7aa;
+                --red: #dc2626;
+                --red-light: #fef2f2;
+                --red-border: #fecaca;
+                --blue: #2563eb;
+                --blue-light: #eff6ff;
+                --blue-border: #bfdbfe;
+                --green: #16a34a;
+                --green-light: #f0fdf4;
+                --bg: #ffffff;
+                --surface: #f8fafc;
+                --surface-2: #f1f5f9;
+                --border: #e2e8f0;
+                --border-dark: #cbd5e1;
+                --text: #0f172a;
+                --text-2: #334155;
+                --text-muted: #64748b;
+                --text-faint: #94a3b8;
+                --mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+                --sans:
+                    "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+                --sidebar-w: 300px;
+            }
+
+            body {
+                background: var(--surface);
+                color: var(--text);
+                font-family: var(--sans);
+                font-size: 14px;
+                line-height: 1.6;
+                min-height: 100vh;
+            }
+
+            .topbar {
+                height: 48px;
+                background: var(--bg);
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 1.5rem;
+                position: sticky;
+                top: 0;
+                z-index: 200;
+            }
+            .topbar-brand {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                text-decoration: none;
+            }
+            .topbar-logo {
+                width: 26px;
+                height: 26px;
+                background: var(--orange);
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .topbar-logo svg {
+                width: 14px;
+                height: 14px;
+                fill: white;
+            }
+            .topbar-name {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -0.01em;
+            }
+            .topbar-right {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .chip {
+                padding: 3px 9px;
+                border-radius: 999px;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+                border: 1px solid transparent;
+            }
+            .chip-red {
+                background: var(--red-light);
+                color: var(--red);
+                border-color: var(--red-border);
+            }
+            .chip-orange {
+                background: var(--orange-mid);
+                color: var(--orange-dark);
+                border-color: var(--orange-border);
+            }
+            .chip-blue {
+                background: var(--blue-light);
+                color: var(--blue);
+                border-color: var(--blue-border);
+            }
+            .chip-mono {
+                font-family: var(--mono);
+                font-size: 11px;
+            }
+
+            .hero {
+                background: var(--bg);
+                border-bottom: 1px solid var(--border);
+                padding: 2rem 1.5rem;
+            }
+            .hero-inner {
+                max-width: 1180px;
+                margin: 0 auto;
+            }
+            .hero-eyebrow {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 0.6rem;
+            }
+            .pulse-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--red);
+                animation: blink 1.4s ease-in-out infinite;
+            }
+            @keyframes blink {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.3;
+                }
+            }
+            .hero-label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: var(--red);
+            }
+            .hero-title {
+                font-size: 1.75rem;
+                font-weight: 800;
+                letter-spacing: -0.03em;
+                color: var(--text);
+                margin-bottom: 0.9rem;
+                line-height: 1.2;
+            }
+            .hero-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                align-items: center;
+            }
+            .divider-dot {
+                width: 3px;
+                height: 3px;
+                border-radius: 50%;
+                background: var(--border-dark);
+            }
+
+            .layout {
+                max-width: 1180px;
+                margin: 1.5rem auto;
+                padding: 0 1.5rem;
+                display: grid;
+                grid-template-columns: 1fr var(--sidebar-w);
+                gap: 1.25rem;
+                align-items: start;
+            }
+
+            .card {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                overflow: hidden;
+                margin-bottom: 1.25rem;
+            }
+            .card:last-child {
+                margin-bottom: 0;
+            }
+            .card-head {
+                padding: 0.7rem 1rem;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--surface);
+            }
+            .card-head-left {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+            }
+            .card-head-icon {
+                width: 18px;
+                height: 18px;
+                color: var(--text-muted);
+            }
+            .card-head-title {
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--text-2);
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .card-body-flush {
+                padding: 0;
+            }
+
+            pre {
+                font-family: var(--mono);
+                font-size: 12px;
+                line-height: 1.8;
+                color: var(--text-2);
+                background: var(--surface-2);
+                border-radius: 6px;
+                padding: 0.85rem 1rem;
+                overflow-x: auto;
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+
+            .kv {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .kv tr {
+                border-bottom: 1px solid var(--border);
+            }
+            .kv tr:last-child {
+                border-bottom: none;
+            }
+            .kv td {
+                padding: 7px 1rem;
+                vertical-align: top;
+            }
+            .kv td:first-child {
+                font-size: 12px;
+                color: var(--text-muted);
+                font-weight: 500;
+                white-space: nowrap;
+                width: 40%;
+            }
+            .kv td:last-child {
+                font-family: var(--mono);
+                font-size: 12px;
+                color: var(--text);
+                font-weight: 500;
+            }
+            .kv-red {
+                color: var(--red) !important;
+            }
+            .kv-orange {
+                color: var(--orange-dark) !important;
+            }
+            .kv-green {
+                color: var(--green) !important;
+            }
+
+            .section-label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--text-faint);
+                margin-bottom: 0.6rem;
+                padding-left: 2px;
+            }
+
+            .tip-list {
+                list-style: none;
+            }
+            .tip-item {
+                display: flex;
+                gap: 10px;
+                padding: 9px 0;
+                border-bottom: 1px solid var(--border);
+            }
+            .tip-item:last-child {
+                border-bottom: none;
+            }
+            .tip-num {
+                flex-shrink: 0;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: var(--orange-mid);
+                color: var(--orange-dark);
+                font-size: 10px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 1px;
+            }
+            .tip-text {
+                font-size: 13px;
+                color: var(--text-2);
+                line-height: 1.5;
+            }
+            .tip-text code {
+                font-family: var(--mono);
+                font-size: 11px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                padding: 1px 5px;
+                color: var(--orange-dark);
+            }
+
+            .footer {
+                max-width: 1180px;
+                margin: 0 auto 2.5rem;
+                padding: 0 1.5rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .footer-text {
+                font-size: 11px;
+                color: var(--text-faint);
+            }
+            .footer-text strong {
+                color: var(--orange);
+                font-weight: 700;
+            }
+
+            @media (max-width: 800px) {
+                .layout {
+                    grid-template-columns: 1fr;
+                }
+                .hero-title {
+                    font-size: 1.3rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Top bar -->
+        <nav class="topbar">
+            <div class="topbar-brand">
+                <div class="topbar-logo">
+                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M8 1L1 5v6l7 4 7-4V5L8 1zm0 1.8L13.2 6 8 9.2 2.8 6 8 2.8zM2 7.1l5.5 3.1V14L2 11V7.1zm7.5 3.1L15 7.1V11l-5.5 3v-3.8z"
+                        />
+                    </svg>
+                </div>
+                <span class="topbar-name">Rango Debugger</span>
+            </div>
+            <div class="topbar-right">
+                <span class="chip chip-red">{status_code}</span>
+                <span class="chip chip-orange chip-mono">{method}</span>
+                <span class="chip chip-blue chip-mono">{uri}</span>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-inner">
+                <div class="hero-eyebrow">
+                    <div class="pulse-dot"></div>
+                    <span class="hero-label">Unhandled Server Error</span>
+                </div>
+                <h1 class="hero-title">{message}</h1>
+                <div class="hero-meta">
+                    <span class="chip chip-red">{status}</span>
+                    <div class="divider-dot"></div>
+                    <span class="chip chip-orange chip-mono"
+                        >{method} {uri}</span
+                    >
+                    <div class="divider-dot"></div>
+                    <span class="chip chip-blue chip-mono">{os} / {arch}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Body -->
+        <div class="layout">
+            <!-- Main col -->
+            <div>
+                <p class="section-label">Request</p>
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-head-left">
+                            <svg
+                                class="card-head-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 12h6m-6 4h6m-6-8h6M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"
+                                />
+                            </svg>
+                            <span class="card-head-title">Headers</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <pre>{headers}</pre>
+                    </div>
+                </div>
+
+                <p class="section-label" style="margin-top: 1.5rem">
+                    Debug hints
+                </p>
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-head-left">
+                            <svg
+                                class="card-head-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z"
+                                />
+                            </svg>
+                            <span class="card-head-title"
+                                >Possible solutions</span
+                            >
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <ul class="tip-list">
+                            <li class="tip-item">
+                                <div class="tip-num">1</div>
+                                <p class="tip-text">
+                                    Check your database connection if you are
+                                    using a model or running queries against it.
+                                </p>
+                            </li>
+                            <li class="tip-item">
+                                <div class="tip-num">2</div>
+                                <p class="tip-text">
+                                    Verify that the template exists inside the
+                                    <code>templates/</code> directory and
+                                    contains no syntax errors.
+                                </p>
+                            </li>
+                            <li class="tip-item">
+                                <div class="tip-num">3</div>
+                                <p class="tip-text">
+                                    Ensure all environment variables are
+                                    correctly set in your
+                                    <code>.env</code> file.
+                                </p>
+                            </li>
+                            <li class="tip-item">
+                                <div class="tip-num">4</div>
+                                <p class="tip-text">
+                                    Look for <code>unwrap()</code> or
+                                    <code>expect()</code> calls that may be
+                                    panicking on <code>None</code> or
+                                    <code>Err</code> values in your route
+                                    handlers.
+                                </p>
+                            </li>
+                            <li class="tip-item">
+                                <div class="tip-num">5</div>
+                                <p class="tip-text">
+                                    Run with <code>RUST_BACKTRACE=1</code> in
+                                    your terminal for a full stack trace in the
+                                    console output.
+                                </p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <p class="section-label">Request details</p>
+                <div class="card">
+                    <div class="card-body-flush">
+                        <table class="kv">
+                            <tr>
+                                <td>Status</td>
+                                <td class="kv-red">{status}</td>
+                            </tr>
+                            <tr>
+                                <td>Method</td>
+                                <td class="kv-orange">{method}</td>
+                            </tr>
+                            <tr>
+                                <td>URI</td>
+                                <td>{uri}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <p class="section-label" style="margin-top: 1.25rem">
+                    Environment
+                </p>
+                <div class="card">
+                    <div class="card-body-flush">
+                        <table class="kv">
+                            <tr>
+                                <td>Rango</td>
+                                <td>v{rango_version}</td>
+                            </tr>
+                            <tr>
+                                <td>Debug</td>
+                                <td class="kv-green">enabled</td>
+                            </tr>
+                            <tr>
+                                <td>OS</td>
+                                <td>{os}</td>
+                            </tr>
+                            <tr>
+                                <td>Arch</td>
+                                <td>{arch}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span class="footer-text"
+                ><strong>Rango</strong> — debug view is only visible when
+                <code style="font-size: 10px">debug = true</code>. Disable
+                before production.</span
+            >
+            <span class="footer-text">v{rango_version}</span>
+        </footer>
+    </body>
+</html>

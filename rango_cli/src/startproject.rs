@@ -21,7 +21,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rango-framework = {{ git = "https://github.com/Dera2Salles/Rango" }}
+rango = {{ version = "0.1.0", package = "rango-framework" }}
 serde_json = "1.0"
 tokio = {{ version = "1.0", features = ["full"] }}
 "#,

@@ -30,35 +30,52 @@ impl IntoResponse for RangoError {
             RangoError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.clone()),
             RangoError::TemplateNotFound(t) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Template introuvable : {}", t),
+                format!("Template not found: {}", t),
             ),
             RangoError::RenderError(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Erreur de rendu : {}", e),
+                format!("Rendering error: {}", e),
             ),
             RangoError::DatabaseError(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Erreur DB : {}", e),
+                format!("DB Error: {}", e),
             ),
             RangoError::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.clone()),
         };
+
+        if crate::state::config().debug {
+            // In debug mode, use the detailed debugger page
+            return crate::debug::render_debug_page(
+                status,
+                &message,
+                "UNKNOWN", // We don't have the method/uri easily here without a middleware
+                "UNKNOWN",
+                "Headers not available in error handler",
+            ).into_response();
+        }
+
         let body = Html(format!(
             r#"<!DOCTYPE html>
 <html>
-<head><title>Rango — Erreur {code}</title>
+<head><title>Rango — Error {code}</title>
 <style>
-  body {{ font-family: monospace; padding: 2rem; background: #1a1a2e; color: #eee; }}
-  h1 {{ color: #e94560; }}
-  pre {{ background: #16213e; padding: 1rem; border-radius: 6px; }}
+  body {{ font-family: sans-serif; padding: 2rem; background: #0f172a; color: #f8fafc; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
+  h1 {{ color: #e94560; font-size: 4rem; margin: 0; }}
+  p {{ color: #94a3b8; font-size: 1.2rem; }}
+  .container {{ max-width: 600px; }}
 </style>
 </head>
 <body>
-  <h1>🤠 Rango Error {code}</h1>
-  <pre>{msg}</pre>
+  <div class="container">
+    <h1>🤠 Oops!</h1>
+    <h2>Error {code}</h2>
+    <p>{msg}</p>
+    <a href="/" style="color: #e94560; text-decoration: none; font-weight: bold;">Back to Home</a>
+  </div>
 </body>
 </html>"#,
             code = status.as_u16(),
-            msg = message
+            msg = if status.is_server_error() { "An internal server error occurred." } else { &message }
         ));
 
         (status, body).into_response()

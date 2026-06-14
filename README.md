@@ -35,6 +35,7 @@ rango_workspace/
 ## 🚀 Installation
 
 ### 1. Add to your project
+
 Add Rango to your `Cargo.toml` dependencies:
 
 ```toml
@@ -46,6 +47,7 @@ tokio = { version = "1.0", features = ["full"] }
 ```
 
 ### 2. Install the CLI
+
 To use the `rango` command-line tool for scaffolding:
 
 ```bash
@@ -57,6 +59,7 @@ cargo install --path rango_cli
 ## 🎯 Quick Start
 
 1. **Create a new project:**
+
    ```bash
    rango startproject my_cool_site
    cd my_cool_site
@@ -72,6 +75,7 @@ cargo install --path rango_cli
 ## 📖 Usage Guide
 
 ### Centralized Routing
+
 Define your application's URL structure in `src/urls.rs`. Rango supports nesting routes just like Django's `include`.
 
 ```rust
@@ -93,6 +97,7 @@ pub async fn home_view() {
 ```
 
 ### Writing Views
+
 Use the `#[view]` macro to turn async functions into valid Rango/Axum handlers. You can use standard Axum extractors like `Path`, `Query`, and `Json`.
 
 ```rust
@@ -110,6 +115,7 @@ pub async fn create_post(Json(body): Json<serde_json::Value>) {
 ```
 
 ### Template Rendering
+
 Rango uses **MiniJinja** for high-performance template rendering. Use the `context!` macro to pass data to your templates easily.
 
 ```rust
@@ -127,6 +133,7 @@ pub async fn blog_index() {
 ```
 
 ### Configuration
+
 Initialize Rango with a configuration struct in your `main.rs`:
 
 ```rust
@@ -146,7 +153,8 @@ async fn main() {
 }
 ```
 
-### Database Models
+### Database Models (Coming soon)
+
 Rango provides a simple `RangoModel` trait for basic CRUD operations (when the `db` feature is enabled).
 
 ```rust
@@ -168,6 +176,7 @@ let posts = Post::all().await.unwrap();
 ```
 
 ### Middleware
+
 Rango supports standard Axum middleware and provides some built-in helpers.
 
 ```rust

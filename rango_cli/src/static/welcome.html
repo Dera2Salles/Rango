@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rango — It works</title>
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            :root {
+                --orange: #f97316;
+                --orange-dark: #c2410c;
+                --orange-light: #fff7ed;
+                --orange-mid: #ffedd5;
+                --orange-border: #fed7aa;
+                --bg: #ffffff;
+                --surface: #f8fafc;
+                --surface-2: #f1f5f9;
+                --border: #e2e8f0;
+                --text: #0f172a;
+                --text-2: #334155;
+                --text-muted: #64748b;
+                --text-faint: #94a3b8;
+                --green: #16a34a;
+                --green-light: #f0fdf4;
+                --green-border: #bbf7d0;
+                --mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+                --sans:
+                    "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+            }
+
+            body {
+                background: var(--surface);
+                color: var(--text);
+                font-family: var(--sans);
+                font-size: 14px;
+                line-height: 1.6;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* ── Topbar ── */
+            .topbar {
+                height: 48px;
+                background: var(--bg);
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 1.5rem;
+            }
+            .topbar-brand {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .topbar-logo {
+                width: 26px;
+                height: 26px;
+                background: var(--orange);
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .topbar-logo svg {
+                width: 14px;
+                height: 14px;
+                fill: white;
+            }
+            .topbar-name {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -0.01em;
+            }
+            .chip {
+                padding: 3px 9px;
+                border-radius: 999px;
+                font-size: 11px;
+                font-weight: 600;
+                border: 1px solid transparent;
+            }
+            .chip-green {
+                background: var(--green-light);
+                color: var(--green);
+                border-color: var(--green-border);
+            }
+            .chip-orange {
+                background: var(--orange-mid);
+                color: var(--orange-dark);
+                border-color: var(--orange-border);
+            }
+
+            /* ── Hero ── */
+            .hero {
+                background: var(--bg);
+                border-bottom: 1px solid var(--border);
+                padding: 3.5rem 1.5rem 3rem;
+                text-align: center;
+            }
+            .hero-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: var(--green-light);
+                color: var(--green);
+                border: 1px solid var(--green-border);
+                border-radius: 999px;
+                padding: 4px 12px;
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-bottom: 1.5rem;
+            }
+            .pulse {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: var(--green);
+                animation: blink 1.4s ease-in-out infinite;
+            }
+            @keyframes blink {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.3;
+                }
+            }
+
+            .hero-title {
+                font-size: 3rem;
+                font-weight: 800;
+                letter-spacing: -0.04em;
+                color: var(--text);
+                line-height: 1.1;
+                margin-bottom: 0.6rem;
+            }
+            .hero-title span {
+                color: var(--orange);
+            }
+
+            .hero-sub {
+                font-size: 1rem;
+                color: var(--text-muted);
+                margin-bottom: 2rem;
+                max-width: 460px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-cmd {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 0.6rem 1rem;
+                font-family: var(--mono);
+                font-size: 13px;
+                color: var(--text-2);
+            }
+            .hero-cmd-prompt {
+                color: var(--orange);
+                font-weight: 700;
+                user-select: none;
+            }
+
+            /* ── Content ── */
+            .content {
+                max-width: 860px;
+                margin: 2rem auto;
+                padding: 0 1.5rem;
+                width: 100%;
+            }
+
+            .section-label {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: var(--text-faint);
+                margin-bottom: 0.75rem;
+                padding-left: 2px;
+            }
+
+            /* ── Cards grid ── */
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .card {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 1.1rem 1.25rem;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                transition: border-color 0.15s;
+            }
+            .card:hover {
+                border-color: var(--orange-border);
+            }
+
+            .card-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: var(--orange-mid);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 4px;
+            }
+            .card-icon svg {
+                width: 16px;
+                height: 16px;
+                stroke: var(--orange-dark);
+                fill: none;
+                stroke-width: 1.75;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+            .card-title {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text);
+            }
+            .card-desc {
+                font-size: 12px;
+                color: var(--text-muted);
+                line-height: 1.5;
+            }
+
+            /* ── Next steps ── */
+            .steps {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                overflow: hidden;
+                margin-bottom: 1.5rem;
+            }
+            .step {
+                display: flex;
+                align-items: flex-start;
+                gap: 1rem;
+                padding: 0.9rem 1.25rem;
+                border-bottom: 1px solid var(--border);
+            }
+            .step:last-child {
+                border-bottom: none;
+            }
+            .step-num {
+                flex-shrink: 0;
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                background: var(--orange-mid);
+                color: var(--orange-dark);
+                font-size: 11px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 1px;
+            }
+            .step-body {
+                flex: 1;
+            }
+            .step-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 2px;
+            }
+            .step-desc {
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+            code {
+                font-family: var(--mono);
+                font-size: 11px;
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                padding: 1px 5px;
+                color: var(--orange-dark);
+            }
+
+            /* ── Footer ── */
+            .footer {
+                margin-top: auto;
+                border-top: 1px solid var(--border);
+                background: var(--bg);
+                padding: 1rem 1.5rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .footer-text {
+                font-size: 11px;
+                color: var(--text-faint);
+            }
+            .footer-text strong {
+                color: var(--orange);
+                font-weight: 700;
+            }
+
+            @media (max-width: 600px) {
+                .hero-title {
+                    font-size: 2rem;
+                }
+                .topbar-right {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="topbar">
+            <div class="topbar-brand">
+                <div class="topbar-logo">
+                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M8 1L1 5v6l7 4 7-4V5L8 1zm0 1.8L13.2 6 8 9.2 2.8 6 8 2.8zM2 7.1l5.5 3.1V14L2 11V7.1zm7.5 3.1L15 7.1V11l-5.5 3v-3.8z"
+                        />
+                    </svg>
+                </div>
+                <span class="topbar-name">Rango Framework</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center">
+                <span class="chip chip-green">Running</span>
+                <span class="chip chip-orange">v0.1.0</span>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-badge">
+                <div class="pulse"></div>
+                Server is running
+            </div>
+            <h1 class="hero-title">Welcome to <span>Rango</span></h1>
+            <p class="hero-sub">
+                Your Rust web framework is up and running. Start building your
+                application by editing the files below.
+            </p>
+            <div class="hero-cmd">
+                <span class="hero-cmd-prompt">$</span>
+                <span>cargo run</span>
+            </div>
+        </section>
+
+        <div class="content">
+            <p class="section-label">What Rango gives you</p>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                    </div>
+                    <div class="card-title">Fast routing</div>
+                    <div class="card-desc">
+                        Declarative URL patterns via
+                        <code>rango_urls!</code> macro, inspired by Django.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 6h16M4 12h16M4 18h10" />
+                        </svg>
+                    </div>
+                    <div class="card-title">Template engine</div>
+                    <div class="card-desc">
+                        Jinja-like templates with
+                        <code>{% block %}</code> inheritance in
+                        <code>templates/</code>.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 0v20M2 12h20"
+                            />
+                        </svg>
+                    </div>
+                    <div class="card-title">Static files</div>
+                    <div class="card-desc">
+                        Drop assets in <code>static/</code> — served
+                        automatically at <code>/static</code>.
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM12 12v.01"
+                            />
+                        </svg>
+                    </div>
+                    <div class="card-title">Migrations</div>
+                    <div class="card-desc">
+                        Database migration files live in
+                        <code>migrations/</code>, ready for SQLx.
+                    </div>
+                </div>
+            </div>
+
+            <p class="section-label">Next steps</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <div class="step-title">Edit your routes</div>
+                        <div class="step-desc">
+                            Open <code>src/urls.rs</code> and declare your URL
+                            patterns using <code>rango_urls!</code>.
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <div class="step-title">Create your views</div>
+                        <div class="step-desc">
+                            Add handler functions annotated with
+                            <code>#[view]</code> and wire them to routes.
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <div class="step-title">Configure your environment</div>
+                        <div class="step-desc">
+                            Copy <code>.env.example</code> to
+                            <code>.env</code> and set your
+                            <code>DATABASE_URL</code> and other variables.
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-body">
+                        <div class="step-title">Run migrations</div>
+                        <div class="step-desc">
+                            Use <code>rango migrate</code> once your models are
+                            defined to apply schema changes.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span class="footer-text"
+                ><strong>Rango</strong> — Built on Axum + Tokio. Fast by
+                default.</span
+            >
+            <span class="footer-text">v0.1.0</span>
+        </footer>
+    </body>
+</html>

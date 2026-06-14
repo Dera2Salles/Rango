@@ -1,6 +1,9 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{Ident, LitStr, parse::{Parse, ParseStream}, Token, Result};
+use syn::{
+    parse::{Parse, ParseStream},
+    Ident, LitStr, Result, Token,
+};
 
 pub struct RouteEntry {
     path: LitStr,
@@ -58,7 +61,7 @@ impl Parse for RangoUrlsInput {
     }
 }
 
-pub fn expand_rango_urls(parsed: RangoUrlsInput) -> TokenStream2 {
+pub fn expand_urls(parsed: RangoUrlsInput) -> TokenStream2 {
     let mut registrations = Vec::new();
 
     for item in parsed.items {

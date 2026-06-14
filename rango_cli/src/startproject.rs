@@ -58,9 +58,9 @@ async fn main() {
 "#;
     fs::write(format!("{}/src/main.rs", name), main_rs).map_err(RangoCliError::IoError)?;
 
-    let urls_rs = r#"use rango::macros::{rango_urls, view};
+    let urls_rs = r#"use rango::macros::{urls, view};
 
-rango_urls!(
+urls!(
     path("/", home),
 );
 

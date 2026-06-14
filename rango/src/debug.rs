@@ -15,14 +15,23 @@ pub async fn debug_error_middleware(req: Request<axum::body::Body>, next: Next) 
     let response = next.run(req).await;
 
     if response.status().is_server_error() && config().debug {
-        return render_debug_page(
+        let message = response
+            .extensions()
+            .get::<crate::error::RangoError>()
+            .map(|e| e.to_string())
+            .unwrap_or_else(|| "An internal server error occurred.".to_string());
+
+        return (
             response.status(),
-            "An internal server error occurred.",
-            &method.to_string(),
-            &uri.to_string(),
-            &format!("{:#?}", headers),
+            render_debug_page(
+                response.status(),
+                &message,
+                &method.to_string(),
+                &uri.to_string(),
+                &format!("{:#?}", headers),
+            ),
         )
-        .into_response();
+            .into_response();
     }
 
     response
@@ -44,6 +53,13 @@ pub fn render_debug_page(
         .replace("{headers}", headers)
         .replace("{os}", std::env::consts::OS)
         .replace("{arch}", std::env::consts::ARCH)
+        .replace(
+            "{cwd}",
+            &std::env::current_dir()
+                .unwrap_or_default()
+                .display()
+                .to_string(),
+        )
         .replace("{rango_version}", env!("CARGO_PKG_VERSION"));
 
     Html(html)

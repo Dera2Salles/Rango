@@ -10,17 +10,17 @@ Rango is a lightweight, ergonomic web framework built on top of Axum. It is care
 
 ---
 
-## ⚡ Key Features
+## Key Features
 
-- **Django-Inspired Routing 🛤️**: Centralize your URLs in a single, clean file using the `urls!` macro. Support for nested sub-routers via `include` and `path`.
-- **Simplified View Handling 👁️**: Write clean, asynchronous handlers using `#[view]` attributes. Let Rango manage the underlying Axum routing plumbing.
-- **On-Demand Database Support 🗄️**: Seamless database integration with compile-time query validation, completely optional and feature-gated.
-- **Ergonomic Contexts 🧪**: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
+- **Django-Inspired Routing ️**: Centralize your URLs in a single, clean file using the `urls!` macro. Support for nested sub-routers via `include` and `path`.
+- **Simplified View Handling ️**: Write clean, asynchronous handlers using `#[view]` attributes. Let Rango manage the underlying Axum routing plumbing.
+- **On-Demand Database Support ️**: Seamless database integration with compile-time query validation, completely optional and feature-gated.
+- **Ergonomic Contexts **: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
 - **Blazing Fast Compilation 🚀**: Highly modular design. If you don't use the database or templates, they aren't compiled. Keep your binary lightweight.
 
 ---
 
-## 🏗️ Project Structure
+## ️ Project Structure
 
 ```text
 rango_workspace/
@@ -32,7 +32,7 @@ rango_workspace/
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### 1. Add to your project
 
@@ -40,10 +40,11 @@ Add Rango to your `Cargo.toml` dependencies:
 
 ```toml
 [dependencies]
-rango = { git = "https://github.com/Dera2Salles/rango-framework", subfolder = "rango" }
-serde = { version = "1.0", features = ["derive"] }
+rango = {{ version = "0.1.0", package = "rango-framework", features = ["db", "templates"] }}
+serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
-tokio = { version = "1.0", features = ["full"] }
+sqlx = {{ version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "any", "migrate"] }}
+tokio = {{ version = "1.0", features = ["full"] }}
 ```
 
 ### 2. Install the CLI
@@ -56,7 +57,7 @@ cargo install --path rango_cli
 
 ---
 
-## 🎯 Quick Start
+## Quick Start
 
 1. **Create a new project:**
 
@@ -72,7 +73,7 @@ cargo install --path rango_cli
 
 ---
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Centralized Routing
 
@@ -190,7 +191,7 @@ let router = urls::get_rango_router()
 
 ---
 
-## 🛠️ CLI Commands
+## ️ CLI Commands
 
 - `rango startproject <name>`: Scaffolds a new Rango project structure.
 - `rango startapp <name>`: Creates a new "app" module with `views.rs`, `urls.rs`, and a template folder.
@@ -198,6 +199,6 @@ let router = urls::get_rango_router()
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

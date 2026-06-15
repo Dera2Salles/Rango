@@ -2,7 +2,7 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone)]
 pub enum RangoError {
     #[error("Template not found : {0}")]
     TemplateNotFound(String),
@@ -43,17 +43,6 @@ impl IntoResponse for RangoError {
             RangoError::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.clone()),
         };
 
-        if crate::state::config().debug {
-            // In debug mode, use the detailed debugger page
-            return crate::debug::render_debug_page(
-                status,
-                &message,
-                "UNKNOWN", // We don't have the method/uri easily here without a middleware
-                "UNKNOWN",
-                "Headers not available in error handler",
-            ).into_response();
-        }
-
         let body = Html(format!(
             r#"<!DOCTYPE html>
 <html>
@@ -75,10 +64,16 @@ impl IntoResponse for RangoError {
 </body>
 </html>"#,
             code = status.as_u16(),
-            msg = if status.is_server_error() { "An internal server error occurred." } else { &message }
+            msg = if status.is_server_error() {
+                "An internal server error occurred."
+            } else {
+                &message
+            }
         ));
 
-        (status, body).into_response()
+        let mut res = (status, body).into_response();
+        res.extensions_mut().insert(self);
+        res
     }
 }
 

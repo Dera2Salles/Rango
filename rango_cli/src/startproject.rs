@@ -4,7 +4,6 @@ use std::path::Path;
 
 pub fn startproject(name: &str) -> Result<(), RangoCliError> {
     let project_root = name;
-
     if Path::new(project_root).exists() {
         return Err(RangoCliError::ProjectAlreadyExist(name.to_string()));
     }
@@ -32,8 +31,6 @@ tokio = {{ version = "1.0", features = ["full"] }}
     let gitignore = r#"/target
 **/*.rs.bk
 Cargo.lock
-
-# Environnement
 .env
 .env.local
 "#;
@@ -51,7 +48,6 @@ RUST_LOG=rango=debug,tower_http=debug
 #[tokio::main]
 async fn main() {
     let router = urls::get_rango_router();
-
     rango::start(router)
         .bind("127.0.0.1:8000")
         .with_static("/static", "./static")
@@ -62,25 +58,24 @@ async fn main() {
 "#;
     fs::write(format!("{}/src/main.rs", name), main_rs).map_err(RangoCliError::IoError)?;
 
-    let urls_rs = r#"use rango::macros::{rango_urls, view};
+    let urls_rs = r#"use rango::macros::{urls, view};
 
-// Declare your views here and use include() for the apps
-rango_urls!(
+urls!(
     path("/", home),
 );
 
-// View startup inline
 #[view]
 pub async fn home() {
-    "<h1>🤠 Rango works !</h1>"
+    rango::responses::render("welcome.html", serde_json::json!({}))
 }
 "#;
     fs::write(format!("{}/src/urls.rs", name), urls_rs).map_err(RangoCliError::IoError)?;
 
     let base_html = r#"<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Rango{% endblock %}</title>
 </head>
 <body>
@@ -91,9 +86,13 @@ pub async fn home() {
     fs::write(format!("{}/templates/base.html", name), base_html)
         .map_err(RangoCliError::IoError)?;
 
-    println!(" Project '{}' created !", name);
-    println!("   cd {}", name);
-    println!("   cargo run");
+    let welcome_html = include_str!("static/welcome.html");
+    fs::write(format!("{}/templates/welcome.html", name), welcome_html)
+        .map_err(RangoCliError::IoError)?;
+
+    println!("Project '{}' created successfully.", name);
+    println!("  cd {}", name);
+    println!("  cargo run");
 
     Ok(())
 }

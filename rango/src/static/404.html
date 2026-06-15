@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>404 - Page Not Found | Rango</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            :root {
+                --orange: #f97316;
+                --orange-light: #fff7ed;
+                --orange-mid: #ffedd5;
+                --orange-dark: #ea580c;
+                --text: #1c1917;
+                --muted: #78716c;
+                --border: #e7e5e4;
+                --bg: #ffffff;
+            }
+            body {
+                background-color: var(--bg);
+                color: var(--text);
+                font-family:
+                    "Segoe UI",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+            }
+            .wrapper {
+                display: flex;
+                align-items: center;
+                gap: 4rem;
+                max-width: 900px;
+                width: 100%;
+            }
+            .left {
+                flex: 1;
+                text-align: left;
+            }
+            .badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: var(--orange-mid);
+                color: var(--orange-dark);
+                font-size: 0.75rem;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                padding: 0.35rem 0.85rem;
+                border-radius: 999px;
+                margin-bottom: 1.5rem;
+            }
+            .badge-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--orange);
+            }
+            h1 {
+                font-size: 7rem;
+                font-weight: 800;
+                line-height: 1;
+                letter-spacing: -0.04em;
+                color: var(--text);
+                margin-bottom: 0.5rem;
+            }
+            h1 span {
+                color: var(--orange);
+            }
+            h2 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 0.75rem;
+            }
+            p {
+                color: var(--muted);
+                font-size: 1rem;
+                line-height: 1.7;
+                margin-bottom: 2rem;
+                max-width: 380px;
+            }
+            .actions {
+                display: flex;
+                gap: 0.75rem;
+                align-items: center;
+            }
+            .btn-primary {
+                background: var(--orange);
+                color: white;
+                text-decoration: none;
+                padding: 0.7rem 1.4rem;
+                border-radius: 0.5rem;
+                font-weight: 600;
+                font-size: 0.95rem;
+                transition:
+                    background 0.2s,
+                    transform 0.15s;
+                border: none;
+            }
+            .btn-primary:hover {
+                background: var(--orange-dark);
+                transform: translateY(-1px);
+            }
+            .btn-secondary {
+                color: var(--muted);
+                text-decoration: none;
+                padding: 0.7rem 1.4rem;
+                border-radius: 0.5rem;
+                font-weight: 500;
+                font-size: 0.95rem;
+                border: 1px solid var(--border);
+                transition:
+                    border-color 0.2s,
+                    color 0.2s;
+            }
+            .btn-secondary:hover {
+                border-color: var(--orange);
+                color: var(--orange);
+            }
+            .right {
+                flex: 0 0 300px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .visual {
+                position: relative;
+                width: 260px;
+                height: 260px;
+            }
+            .circle-bg {
+                width: 260px;
+                height: 260px;
+                border-radius: 50%;
+                background: var(--orange-light);
+                border: 2px dashed #fed7aa;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .circle-inner {
+                width: 180px;
+                height: 180px;
+                border-radius: 50%;
+                background: var(--orange-mid);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.25rem;
+            }
+            .icon-big {
+                font-size: 4rem;
+                line-height: 1;
+            }
+            .icon-label {
+                font-size: 0.7rem;
+                font-weight: 700;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--orange-dark);
+            }
+            .pill {
+                position: absolute;
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                padding: 0.4rem 0.9rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--text);
+                white-space: nowrap;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            }
+            .pill-1 {
+                top: 10px;
+                right: -10px;
+            }
+            .pill-2 {
+                bottom: 30px;
+                left: -20px;
+                color: var(--orange);
+                border-color: #fed7aa;
+            }
+            .divider {
+                width: 40px;
+                height: 3px;
+                background: var(--orange);
+                border-radius: 999px;
+                margin-bottom: 1.25rem;
+            }
+            @media (max-width: 640px) {
+                .wrapper {
+                    flex-direction: column-reverse;
+                    gap: 2rem;
+                    text-align: center;
+                }
+                .left {
+                    text-align: center;
+                }
+                p {
+                    max-width: 100%;
+                }
+                .actions {
+                    justify-content: center;
+                }
+                .right {
+                    flex: none;
+                }
+                h1 {
+                    font-size: 5rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="left">
+                <h1><span>4</span>0<span>4</span></h1>
+                <div class="divider"></div>
+                <h2>Trail dead end.</h2>
+                <p>
+                    The page you're looking for has vanished into the Rango
+                    desert. It may have been moved, deleted, or never existed.
+                </p>
+                <div class="actions">
+                    <a href="/" class="btn-primary">Back to Home</a>
+                    <a href="javascript:history.back()" class="btn-secondary"
+                        >Go back</a
+                    >
+                </div>
+            </div>
+            <div class="right">
+                <div class="visual">
+                    <div class="circle-bg">
+                        <div class="circle-inner">
+                            <div class="icon-big">🤠</div>
+                            <span class="icon-label">Rango</span>
+                        </div>
+                    </div>
+                    <div class="pill pill-1">Page not found</div>
+                    <div class="pill pill-2">Lost in the desert</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

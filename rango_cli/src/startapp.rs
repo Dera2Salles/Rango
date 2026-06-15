@@ -28,10 +28,10 @@ pub async fn index() {{
     fs::write(format!("{}/views.rs", app_dir), views).map_err(RangoCliError::IoError)?;
 
     let urls = format!(
-        r#"use rango::macros::rango_urls;
+        r#"use rango::macros::urls;
 use crate::{}::views;
 
-rango_urls!(
+urls!(
     path("/", views::index),
 );
 "#,

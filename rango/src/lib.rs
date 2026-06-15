@@ -1,48 +1,45 @@
+mod debug;
 pub mod error;
+pub mod middleware;
+mod not_found;
 pub mod responses;
 pub mod state;
-pub mod middleware;
-mod debug;
-mod default;
-
 
 #[cfg(feature = "db")]
 pub mod db;
 
 pub use error::{RangoError, RangoResult};
 pub use responses::{
-    redirect, redirect_permanent,
-    json_response, json_response_with_status,
-    text_response, http_404,
+    http_404, json_response, json_response_with_status, redirect, redirect_permanent, text_response,
 };
-pub use state::{RangoConfig, RangoState, StateWrapper, init_config, config};
+pub use state::{config, init_config, RangoConfig, RangoState, StateWrapper};
 
 #[cfg(feature = "templates")]
 pub use responses::render;
 
 #[cfg(feature = "db")]
-pub use db::{init_db, db, RangoModel};
+pub use db::{db, init_db, RangoModel};
 
 pub mod macros {
-    pub use rango_macros::view;
-    pub use rango_macros::rango_urls;
     pub use rango_macros::context;
     pub use rango_macros::login_required;
+    pub use rango_macros::urls;
+    pub use rango_macros::view;
 }
 
+pub use axum;
 pub use axum::{
-    extract::{Path, Query, Json, State},
+    extract::{Json, Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
 };
-pub use axum;
 pub use serde_json::json;
 
 use axum::middleware::from_fn;
 use axum::Router;
 use tower_http::trace::TraceLayer;
 
-use crate::default::default_404_handler;
+use crate::not_found::default_404_handler;
 
 pub struct RangoBuilder {
     router: Router,
@@ -85,25 +82,27 @@ impl RangoBuilder {
             .init();
 
         if let Some((prefix, path)) = self.static_dir {
-            self.router = self.router.nest_service(
-                &prefix,
-                middleware::static_files_service(&path),
-            );
+            self.router = self
+                .router
+                .nest_service(&prefix, middleware::static_files_service(&path));
         }
 
         if self.enable_cors {
             self.router = self.router.layer(middleware::cors_layer());
         }
 
-        self.router = self.router
+        self.router = self
+            .router
             .layer(from_fn(middleware::logger_middleware))
             .layer(TraceLayer::new_for_http());
 
         self.router = self.router.fallback(default_404_handler);
-        
+
         if config().debug {
             println!("🛠️  Rango Debugger enabled");
-            self.router = self.router.layer(from_fn(crate::debug::debug_error_middleware));
+            self.router = self
+                .router
+                .layer(from_fn(crate::debug::debug_error_middleware));
         }
 
         let listener = tokio::net::TcpListener::bind(&self.addr)

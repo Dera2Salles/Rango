@@ -22,10 +22,10 @@ pub fn login_required(_attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn rango_urls(input: TokenStream) -> TokenStream {
+pub fn urls(input: TokenStream) -> TokenStream {
     let parsed = parse_macro_input!(input as urls::RangoUrlsInput);
 
-    TokenStream::from(urls::expand_rango_urls(parsed))
+    TokenStream::from(urls::expand_urls(parsed))
 }
 
 #[proc_macro]

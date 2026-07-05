@@ -53,6 +53,7 @@ pub fn static_files_service(dir: &str) -> ServeDir {
     ServeDir::new(dir)
 }
 
+#[cfg(not(feature = "auth"))]
 pub async fn require_auth(req: Request, next: Next) -> Result<Response, StatusCode> {
     let auth_header = req
         .headers()
@@ -63,4 +64,36 @@ pub async fn require_auth(req: Request, next: Next) -> Result<Response, StatusCo
         Some(token) if token.starts_with("Bearer ") => Ok(next.run(req).await),
         _ => Err(StatusCode::UNAUTHORIZED),
     }
+}
+
+#[cfg(feature = "auth")]
+pub async fn require_auth(
+    session: tower_sessions::Session,
+    req: Request,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    if let Ok(Some(_)) = crate::auth::get_user_id(&session).await {
+        Ok(next.run(req).await)
+    } else {
+        Err(StatusCode::UNAUTHORIZED)
+    }
+}
+
+#[cfg(feature = "auth")]
+pub async fn csrf_middleware(
+    session: tower_sessions::Session,
+    req: Request,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    let method = req.method();
+    if method == Method::POST || method == Method::PUT || method == Method::DELETE {
+        let token = req.headers().get("X-CSRF-Token").and_then(|v| v.to_str().ok());
+        if let Some(token) = token {
+            if crate::csrf::validate_csrf(&session, token).await {
+                return Ok(next.run(req).await);
+            }
+        }
+        return Err(StatusCode::FORBIDDEN);
+    }
+    Ok(next.run(req).await)
 }

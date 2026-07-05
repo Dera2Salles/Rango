@@ -5,6 +5,11 @@ mod not_found;
 pub mod responses;
 pub mod state;
 
+#[cfg(feature = "auth")]
+pub mod auth;
+#[cfg(feature = "auth")]
+pub mod csrf;
+
 #[cfg(feature = "db")]
 pub mod db;
 
@@ -162,6 +167,14 @@ impl RangoBuilder {
         let cors_enabled = self.cors_override.unwrap_or(cfg.cors_allow_all);
         if cors_enabled {
             self.router = self.router.layer(middleware::cors_layer());
+        }
+
+        #[cfg(feature = "auth")]
+        {
+            let session_store = tower_sessions::MemoryStore::default();
+            let session_layer = tower_sessions::SessionManagerLayer::new(session_store)
+                .with_secure(false); // Set to true in prod with HTTPS
+            self.router = self.router.layer(session_layer);
         }
 
         // ── Middleware stack ──────────────────────────────────────────────────

@@ -1,0 +1,229 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ model_name }} | Rango Admin{% endblock %}
+
+{% block navbar_title %}{{ model_name }} List{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .search-box {
+        position: relative;
+        width: 300px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 15px 10px 40px;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    th {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover td {
+        background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-success {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: var(--success);
+    }
+
+    .badge-secondary {
+        background-color: rgba(148, 163, 184, 0.15);
+        color: var(--text-secondary);
+    }
+
+    .actions-cell {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        border: 1px solid var(--border-color);
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .btn-action-edit:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+
+    .btn-action-delete:hover {
+        color: var(--danger);
+        border-color: var(--danger);
+        background-color: rgba(244, 63, 94, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="list-header">
+    <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterTable()">
+    </div>
+    <a href="/admin/{{ model_name }}/add" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Add {{ model_name }}
+    </a>
+</div>
+
+<div class="glass-card" style="padding: 0;">
+    <div class="table-container">
+        <table id="modelTable">
+            <thead>
+                <tr>
+                    {% for field in fields %}
+                    <th>{{ field.name }}</th>
+                    {% endfor %}
+                    <th style="width: 100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    {% for field in fields %}
+                    <td>
+                        {% if field.field_type == "bool" %}
+                            {% if item[field.name] %}
+                            <span class="badge badge-success"><i class="fa-solid fa-check"></i> True</span>
+                            {% else %}
+                            <span class="badge badge-secondary"><i class="fa-solid fa-xmark"></i> False</span>
+                            {% endif %}
+                        {% else %}
+                            {{ item[field.name] }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td>
+                        <div class="actions-cell">
+                            <a href="/admin/{{ model_name }}/{{ item.id }}" class="btn-action btn-action-edit" title="Edit">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <form action="/admin/{{ model_name }}/{{ item.id }}/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline;">
+                                <button type="submit" class="btn-action btn-action-delete" title="Delete">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{{ fields|length + 1 }}" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; margin-bottom: 10px; display: block;"></i>
+                        No records found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("modelTable");
+        var tr = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < tr.length; i++) {
+            var trDisplay = "none";
+            var tdList = tr[i].getElementsByTagName("td");
+            // Search all cells except action column
+            for (var j = 0; j < tdList.length - 1; j++) {
+                var td = tdList[j];
+                if (td) {
+                    var txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        trDisplay = "";
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = trDisplay;
+        }
+    }
+</script>
+{% endblock %}

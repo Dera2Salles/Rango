@@ -1,0 +1,141 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Dashboard | Rango Admin{% endblock %}
+
+{% block navbar_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .welcome-card {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .welcome-card h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .welcome-card p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
+    .grid-models {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .model-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 180px;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .model-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .model-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .model-card-title {
+        font-size: 1.35rem;
+        font-weight: 600;
+    }
+
+    .model-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background-color: rgba(99, 102, 241, 0.1);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .model-card-count {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-top: 15px;
+    }
+
+    .model-card-count-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .model-card-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+        border-top: 1px solid var(--border-color);
+        padding-top: 15px;
+    }
+
+    .model-card-actions a {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .model-card-actions a:hover {
+        color: var(--accent-hover);
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-card">
+    <h1>Welcome to <span class="text-gradient">Rango Admin</span></h1>
+    <p>Manage your application data, database records, and site configurations effortlessly.</p>
+</div>
+
+<div class="grid-models">
+    {% for model in models %}
+    <div class="glass-card model-card">
+        <div class="model-card-header">
+            <div>
+                <div class="model-card-title">{{ model.name }}</div>
+                <div class="model-card-count">{{ model.count }}</div>
+                <div class="model-card-count-label">total records</div>
+            </div>
+            <div class="model-card-icon">
+                <i class="fa-solid fa-table"></i>
+            </div>
+        </div>
+        <div class="model-card-actions">
+            <a href="/admin/{{ model.name }}"><i class="fa-solid fa-list"></i> View list</a>
+            <a href="/admin/{{ model.name }}/add" style="margin-left: 15px;"><i class="fa-solid fa-plus"></i> Add new</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 15px;"></i>
+        <h2>No models registered</h2>
+        <p style="color: var(--text-secondary); margin-top: 5px;">Register your models with <code>rango_admin.register::&lt;Model&gt;()</code> to manage them here.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

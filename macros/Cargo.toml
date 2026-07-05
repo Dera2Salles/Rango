@@ -3,7 +3,7 @@ name = "rango_macros"
 version = "0.1.0"
 edition = "2021"
 
-aauthors = ["Marie Martinot De Salles DERANDRAINY"]
+authors = ["Marie Martinot De Salles DERANDRAINY"]
 description = "Procedural macros for the Rango web framework."
 repository = "https://github.com/Dera2Salles/Rango"
 license = "MIT"

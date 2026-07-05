@@ -1,7 +1,8 @@
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, ItemFn};
+use syn::{parse_macro_input, ItemFn, ItemStruct};
 
 mod context;
+mod model;
 mod urls;
 mod view;
 
@@ -19,6 +20,14 @@ pub fn login_required(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let empty_attr = view::ViewAttr { method: None };
 
     TokenStream::from(view::expand_view(empty_attr, input_fn))
+}
+
+#[proc_macro_attribute]
+pub fn model(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let model_attr = parse_macro_input!(attr as model::ModelAttr);
+    let input_struct = parse_macro_input!(item as ItemStruct);
+
+    TokenStream::from(model::expand_model(model_attr, input_struct))
 }
 
 #[proc_macro]

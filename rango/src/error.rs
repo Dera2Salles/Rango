@@ -13,6 +13,9 @@ pub enum RangoError {
     #[error("Database error : {0}")]
     DatabaseError(String),
 
+    #[error("Database not initialized : {0}")]
+    DatabaseNotInitialized(String),
+
     #[error("Unauthorized")]
     Unauthorized,
 
@@ -39,6 +42,10 @@ impl IntoResponse for RangoError {
             RangoError::DatabaseError(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("DB Error: {}", e),
+            ),
+            RangoError::DatabaseNotInitialized(msg) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Database not initialized: {}", msg),
             ),
             RangoError::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.clone()),
         };
@@ -82,5 +89,12 @@ pub type RangoResult<T> = Result<T, RangoError>;
 impl From<anyhow::Error> for RangoError {
     fn from(error: anyhow::Error) -> Self {
         RangoError::Internal(error.to_string())
+    }
+}
+
+#[cfg(feature = "db")]
+impl From<sqlx::Error> for RangoError {
+    fn from(error: sqlx::Error) -> Self {
+        RangoError::DatabaseError(error.to_string())
     }
 }

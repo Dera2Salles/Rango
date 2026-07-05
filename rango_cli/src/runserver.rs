@@ -17,6 +17,9 @@ pub fn runserver(addr: &str) -> Result<(), RangoCliError> {
     if status.success() {
         Ok(())
     } else {
-        Err(RangoCliError::RunError)
+        Err(RangoCliError::IoError(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Server process exited with non-zero status",
+        )))
     }
 }

@@ -1,36 +1,22 @@
-use std::fmt;
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RangoCliError {
-    ProjectAlreadyExist(String),
-    AppAlreadyExist(String),
-    IoError(std::io::Error),
-    RunError,
-}
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
 
-impl fmt::Display for RangoCliError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RangoCliError::ProjectAlreadyExist(name) => {
-                write!(
-                    f,
-                    "The project '{}' already exists in the current directory.",
-                    name
-                )
-            }
-            RangoCliError::AppAlreadyExist(name) => {
-                write!(
-                    f,
-                    "The app '{}' already exists in the src/ directory.",
-                    name
-                )
-            }
-            RangoCliError::IoError(err) => {
-                write!(f, "System Error (I/O): {}", err)
-            }
-            RangoCliError::RunError => {
-                write!(f, "The server stopped unexpectedly.")
-            }
-        }
-    }
+    #[error("Project '{0}' already exists")]
+    ProjectAlreadyExist(String),
+
+    #[error("App '{0}' already exists")]
+    AppAlreadyExist(String),
+
+    #[error("Database error: {0}")]
+    DatabaseError(String),
+
+    #[error("Migrations directory not found: {0}")]
+    MigrationsNotFound(String),
+
+    #[error("Command not found: {0}")]
+    CommandNotFound(String),
 }

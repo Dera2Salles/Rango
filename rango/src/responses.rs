@@ -5,12 +5,21 @@ use minijinja::Environment;
 
 use crate::error::RangoError;
 
-#[cfg(feature = "templates")]
+#[cfg(all(feature = "templates", debug_assertions))]
 fn build_env() -> Environment<'static> {
     let mut env = Environment::new();
     env.set_loader(minijinja::path_loader(
         &crate::state::config().templates_dir,
     ));
+    env
+}
+
+#[cfg(all(feature = "templates", not(debug_assertions)))]
+fn build_env() -> Environment<'static> {
+    let mut env = Environment::new();
+
+    minijinja::include_source_bundle!(env, "templates");
+
     env
 }
 
@@ -28,7 +37,6 @@ pub fn render(template_name: &str, context: serde_json::Value) -> Result<Respons
 
     Ok(Html(html).into_response())
 }
-
 pub fn json_response(data: serde_json::Value) -> Response {
     axum::response::Json(data).into_response()
 }

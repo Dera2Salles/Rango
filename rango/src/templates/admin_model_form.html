@@ -1,0 +1,130 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+    {% if is_edit %}Edit {{ model_name }} #{{ item.id }}{% else %}Add {{ model_name }}{% endif %} | Rango Admin
+{% endblock %}
+
+{% block navbar_title %}
+    {% if is_edit %}Edit {{ model_name }} <span style="color: var(--text-secondary);">#{{ item.id }}</span>{% else %}Add {{ model_name }}{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Custom Checkbox */
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .checkbox-group input {
+        display: none;
+    }
+
+    .checkbox-custom {
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background-color: var(--bg-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: transparent;
+        transition: all 0.2s;
+    }
+
+    .checkbox-group input:checked + .checkbox-custom {
+        background-color: var(--accent);
+        border-color: var(--accent);
+        color: white;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 40px;
+        border-top: 1px solid var(--border-color);
+        padding-top: 24px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+    <form method="POST">
+        {% for field in fields %}
+            {% if field.name == "id" %}
+                <!-- ID field is read-only or hidden -->
+                {% if is_edit %}
+                <div class="form-group">
+                    <label class="form-label">ID</label>
+                    <input type="text" class="form-control" value="{{ item.id }}" disabled style="opacity: 0.6; cursor: not-allowed;">
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="form-group">
+                    {% if field.field_type == "bool" %}
+                        <label class="checkbox-group">
+                            <input type="checkbox" name="{{ field.name }}" {% if item and item[field.name] %}checked{% endif %}>
+                            <span class="checkbox-custom">
+                                <i class="fa-solid fa-check" style="font-size: 0.85rem;"></i>
+                            </span>
+                            <span class="form-label" style="margin-bottom: 0;">{{ field.name }}</span>
+                        </label>
+                    {% elif field.field_type == "i64" or field.field_type == "i32" or field.field_type == "u64" or field.field_type == "u32" %}
+                        <label class="form-label">{{ field.name }}</label>
+                        <input type="number" name="{{ field.name }}" class="form-control" value="{% if item %}{{ item[field.name] }}{% else %}0{% endif %}" required>
+                    {% elif field.field_type == "f64" or field.field_type == "f32" %}
+                        <label class="form-label">{{ field.name }}</label>
+                        <input type="number" step="any" name="{{ field.name }}" class="form-control" value="{% if item %}{{ item[field.name] }}{% else %}0.0{% endif %}" required>
+                    {% else %}
+                        <label class="form-label">{{ field.name }}</label>
+                        <input type="text" name="{{ field.name }}" class="form-control" value="{% if item %}{{ item[field.name] }}{% endif %}" required>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="form-actions">
+            <a href="/admin/{{ model_name }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Save Record
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

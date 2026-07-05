@@ -10,17 +10,17 @@ Rango is a lightweight, ergonomic web framework built on top of Axum. It is care
 
 ---
 
-## ⚡ Key Features
+## Key Features
 
-- **Django-Inspired Routing 🛤️**: Centralize your URLs in a single, clean file using the `urls!` macro. Support for nested sub-routers via `include` and `path`.
-- **Simplified View Handling 👁️**: Write clean, asynchronous handlers using `#[view]` attributes. Let Rango manage the underlying Axum routing plumbing.
-- **On-Demand Database Support 🗄️**: Seamless database integration with compile-time query validation, completely optional and feature-gated.
-- **Ergonomic Contexts 🧪**: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
+- **Django-Inspired Routing ️**: Centralize your URLs in a single, clean file using the `urls!` macro. Support for nested sub-routers via `include` and `path`.
+- **Simplified View Handling ️**: Write clean, asynchronous handlers using `#[view]` attributes. Let Rango manage the underlying Axum routing plumbing.
+- **On-Demand Database Support ️**: Seamless database integration with compile-time query validation, completely optional and feature-gated.
+- **Ergonomic Contexts **: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
 - **Blazing Fast Compilation 🚀**: Highly modular design. If you don't use the database or templates, they aren't compiled. Keep your binary lightweight.
 
 ---
 
-## 🏗️ Project Structure
+## ️ Project Structure
 
 ```text
 rango_workspace/
@@ -32,7 +32,7 @@ rango_workspace/
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### 1. Add to your project
 
@@ -40,10 +40,11 @@ Add Rango to your `Cargo.toml` dependencies:
 
 ```toml
 [dependencies]
-rango = { git = "https://github.com/Dera2Salles/rango-framework", subfolder = "rango" }
-serde = { version = "1.0", features = ["derive"] }
+rango = {{ version = "0.1.0", package = "rango-framework", features = ["db", "templates"] }}
+serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
-tokio = { version = "1.0", features = ["full"] }
+sqlx = {{ version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "any", "migrate"] }}
+tokio = {{ version = "1.0", features = ["full"] }}
 ```
 
 ### 2. Install the CLI
@@ -56,7 +57,7 @@ cargo install --path rango_cli
 
 ---
 
-## 🎯 Quick Start
+## Quick Start
 
 1. **Create a new project:**
 
@@ -72,7 +73,7 @@ cargo install --path rango_cli
 
 ---
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Centralized Routing
 
@@ -153,26 +154,65 @@ async fn main() {
 }
 ```
 
-### Database Models (Coming soon)
+### Database Models & ORM
 
-Rango provides a simple `RangoModel` trait for basic CRUD operations (when the `db` feature is enabled).
+Rango comes with a built-in lightweight ORM. Just use the `#[model]` macro to automatically derive CRUD operations, database queries, and migration definitions!
 
 ```rust
-use rango::db::RangoModel;
-use serde::{Serialize, Deserialize};
+use rango::macros::model;
+use rango::RangoModel; // Provides trait methods like `all`, `save`, `get_by_id`, `delete`
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
-pub struct Post {
+#[model]
+pub struct Todo {
     pub id: i64,
     pub title: String,
+    pub completed: i64, // Using i64 for boolean fields guarantees cross-database compatibility
 }
 
-impl RangoModel for Post {
-    fn table_name() -> &'static str { "posts" }
-}
+// Fetch all records
+let todos = Todo::all().await.unwrap();
 
-// In your view:
-let posts = Post::all().await.unwrap();
+// Saving a new record
+let mut new_todo = Todo {
+    id: 0,
+    title: "Write documentation".to_string(),
+    completed: 0,
+};
+new_todo.save().await.unwrap();
+
+// Fetch, update, and delete
+let mut todo = Todo::get_by_id(1).await.unwrap().unwrap();
+todo.completed = 1;
+todo.save().await.unwrap();
+
+todo.delete().await.unwrap();
+```
+
+### Auto-generated Admin Panel
+
+When you use the `#[model]` macro and enable the `templates` and `db` features, Rango provides a Django-style admin panel out of the box to easily manage your data!
+
+1. Create a `RangoAdmin` instance and register your models.
+2. Mount the admin router to your application.
+
+```rust
+use rango::RangoAdmin;
+use crate::models::Todo;
+
+#[tokio::main]
+async fn main() {
+    // ... initialize your configuration ...
+
+    // Register models in the Admin Panel
+    let mut admin = RangoAdmin::new();
+    admin.register::<Todo>();
+
+    // Mount the admin router to /admin
+    let router = urls::get_rango_router()
+        .nest("/admin", admin.router());
+
+    rango::start(router).run().await;
+}
 ```
 
 ### Middleware
@@ -190,7 +230,7 @@ let router = urls::get_rango_router()
 
 ---
 
-## 🛠️ CLI Commands
+## ️ CLI Commands
 
 - `rango startproject <name>`: Scaffolds a new Rango project structure.
 - `rango startapp <name>`: Creates a new "app" module with `views.rs`, `urls.rs`, and a template folder.
@@ -198,6 +238,6 @@ let router = urls::get_rango_router()
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

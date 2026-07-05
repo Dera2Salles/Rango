@@ -2,7 +2,7 @@
 name = "rango-framework"
 version = "0.1.0"
 edition = "2021"
- 
+
 authors = ["Marie Martinot De Salles DERANDRAINY"]
 description = "A powerful, Django-like async web framework built on top of Axum and Tokio."
 homepage = "https://github.com/Dera2Salles/Rango"
@@ -28,16 +28,19 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tower = { version = "0.4", features = ["full"] }
 tower-http = { version = "0.5", features = ["fs", "cors", "trace"] }
-
-minijinja = { version = "2.0", features = ["loader"], optional = true }
-
+minijinja = { version = "2.0", features = ["loader", "json"], optional = true }
 sqlx = { version = "0.7", features = [
     "runtime-tokio-rustls",
     "sqlite",
     "postgres",
+    "mysql",
     "any",
     "migrate",
-    "macros"
+    "macros",
+    "chrono",
+    "uuid"
 ], optional = true }
-
 tower-sessions = { version = "0.12", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["full", "test-util"] }

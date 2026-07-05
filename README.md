@@ -154,26 +154,65 @@ async fn main() {
 }
 ```
 
-### Database Models (Coming soon)
+### Database Models & ORM
 
-Rango provides a simple `RangoModel` trait for basic CRUD operations (when the `db` feature is enabled).
+Rango comes with a built-in lightweight ORM. Just use the `#[model]` macro to automatically derive CRUD operations, database queries, and migration definitions!
 
 ```rust
-use rango::db::RangoModel;
-use serde::{Serialize, Deserialize};
+use rango::macros::model;
+use rango::RangoModel; // Provides trait methods like `all`, `save`, `get_by_id`, `delete`
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
-pub struct Post {
+#[model]
+pub struct Todo {
     pub id: i64,
     pub title: String,
+    pub completed: i64, // Using i64 for boolean fields guarantees cross-database compatibility
 }
 
-impl RangoModel for Post {
-    fn table_name() -> &'static str { "posts" }
-}
+// Fetch all records
+let todos = Todo::all().await.unwrap();
 
-// In your view:
-let posts = Post::all().await.unwrap();
+// Saving a new record
+let mut new_todo = Todo {
+    id: 0,
+    title: "Write documentation".to_string(),
+    completed: 0,
+};
+new_todo.save().await.unwrap();
+
+// Fetch, update, and delete
+let mut todo = Todo::get_by_id(1).await.unwrap().unwrap();
+todo.completed = 1;
+todo.save().await.unwrap();
+
+todo.delete().await.unwrap();
+```
+
+### Auto-generated Admin Panel
+
+When you use the `#[model]` macro and enable the `templates` and `db` features, Rango provides a Django-style admin panel out of the box to easily manage your data!
+
+1. Create a `RangoAdmin` instance and register your models.
+2. Mount the admin router to your application.
+
+```rust
+use rango::RangoAdmin;
+use crate::models::Todo;
+
+#[tokio::main]
+async fn main() {
+    // ... initialize your configuration ...
+
+    // Register models in the Admin Panel
+    let mut admin = RangoAdmin::new();
+    admin.register::<Todo>();
+
+    // Mount the admin router to /admin
+    let router = urls::get_rango_router()
+        .nest("/admin", admin.router());
+
+    rango::start(router).run().await;
+}
 ```
 
 ### Middleware

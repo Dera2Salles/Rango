@@ -3,15 +3,13 @@ use std::fs;
 use std::path::Path;
 
 pub fn startproject(name: &str) -> Result<(), RangoCliError> {
-    let project_root = name;
-    if Path::new(project_root).exists() {
+    if Path::new(name).exists() {
         return Err(RangoCliError::ProjectAlreadyExist(name.to_string()));
     }
 
-    fs::create_dir_all(format!("{}/src", name)).map_err(RangoCliError::IoError)?;
-    fs::create_dir_all(format!("{}/templates", name)).map_err(RangoCliError::IoError)?;
-    fs::create_dir_all(format!("{}/static", name)).map_err(RangoCliError::IoError)?;
-    fs::create_dir_all(format!("{}/migrations", name)).map_err(RangoCliError::IoError)?;
+    for dir in &["src", "templates", "static", "migrations"] {
+        fs::create_dir_all(format!("{}/{}", name, dir)).map_err(RangoCliError::IoError)?;
+    }
 
     let cargo_toml = format!(
         r#"[package]
@@ -20,43 +18,111 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rango = {{ version = "0.1.0", package = "rango-framework" }}
+rango = {{ version = "0.1.0", package = "rango-framework", features = ["db", "templates"] }}
+serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
+sqlx = {{ version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "any", "migrate"] }}
 tokio = {{ version = "1.0", features = ["full"] }}
+# dotenvy = "0.15"   # Uncomment to auto-load .env
 "#,
         name
     );
     fs::write(format!("{}/Cargo.toml", name), cargo_toml).map_err(RangoCliError::IoError)?;
 
-    let gitignore = r#"/target
-**/*.rs.bk
-Cargo.lock
-.env
-.env.local
-"#;
-    fs::write(format!("{}/.gitignore", name), gitignore).map_err(RangoCliError::IoError)?;
+    fs::write(
+        format!("{}/.gitignore", name),
+        "/target\n**/*.rs.bk\nCargo.lock\n.env\n.env.local\n*.db\n*.db-shm\n*.db-wal\n",
+    ).map_err(RangoCliError::IoError)?;
 
-    let env_example = r#"# Rango Framework Configuration
+    let env_example = r#"# ── Server ────────────────────────────────────────────────
 RANGO_ADDR=127.0.0.1:8000
+RANGO_DEBUG=true
+RANGO_SECRET_KEY=change-me-in-production
+RANGO_ALLOWED_HOSTS=127.0.0.1,localhost
+RANGO_TEMPLATES=templates
+RANGO_STATIC=static
+RANGO_CORS_ALL=false
+
+# ── Database ───────────────────────────────────────────────
+# SQLite:
 DATABASE_URL=sqlite://rango.db
+
+# PostgreSQL:
+# DATABASE_URL=postgres://user:password@localhost:5432/mydb
+
+# MySQL / MariaDB:
+# DATABASE_URL=mysql://user:password@localhost:3306/mydb
+
+# Connection pool
+DB_MAX_CONNECTIONS=5
+DB_MIN_CONNECTIONS=1
+DB_CONNECT_TIMEOUT=30
+
+# Migrations
+DB_MIGRATIONS_PATH=./migrations
+DB_AUTO_MIGRATE=true
+
+# Logging
 RUST_LOG=rango=debug,tower_http=debug
 "#;
     fs::write(format!("{}/.env.example", name), env_example).map_err(RangoCliError::IoError)?;
 
-    let main_rs = r#"mod urls;
+    let main_rs = r#"mod models;
+mod urls;
+
+use rango::{RangoConfig, DatabaseConfig, init_config};
 
 #[tokio::main]
 async fn main() {
-    let router = urls::get_rango_router();
-    rango::start(router)
-        .bind("127.0.0.1:8000")
-        .with_static("/static", "./static")
-        .with_cors()
+    // ── Option 1: read everything from environment variables ──────────────
+    // Copy .env.example → .env, then:
+    // init_config(RangoConfig::from_env());
+
+    // ── Option 2: explicit SQLite config ─────────────────────────────────
+    init_config(RangoConfig {
+        database: Some(
+            DatabaseConfig::sqlite("rango.db")
+                .migrations("./migrations"),   // auto-migrates on startup
+        ),
+        ..RangoConfig::default()
+    });
+
+    // ── Option 3: PostgreSQL (uncomment & fill in credentials) ───────────
+    // init_config(RangoConfig {
+    //     database: Some(
+    //         DatabaseConfig::postgres("localhost", 5432, "user", "password", "mydb")
+    //             .max_connections(10)
+    //             .migrations("./migrations"),
+    //     ),
+    //     debug: false,
+    //     secret_key: std::env::var("RANGO_SECRET_KEY").unwrap(),
+    //     ..RangoConfig::default()
+    // });
+
+    rango::start(urls::get_rango_router())
+        // .bind("0.0.0.0:8000")   // optional: overrides RangoConfig.bind_addr
+        // .with_cors()             // optional: overrides RangoConfig.cors_allow_all
         .run()
         .await;
 }
 "#;
     fs::write(format!("{}/src/main.rs", name), main_rs).map_err(RangoCliError::IoError)?;
+
+    let models_rs = r#"use rango::macros::model;
+
+/// Example model — edit or delete as needed.
+/// The #[model] macro derives: save(), delete(), all(), get_by_id(),
+/// get(), filter(), count(), get_or_404(), get_or_create(), objects() QuerySet,
+/// and generates migration SQL.
+#[model]
+pub struct Post {
+    pub id: i64,
+    pub title: String,
+    pub body: String,
+    pub published: bool,
+}
+"#;
+    fs::write(format!("{}/src/models.rs", name), models_rs).map_err(RangoCliError::IoError)?;
 
     let urls_rs = r#"use rango::macros::{urls, view};
 
@@ -70,6 +136,22 @@ pub async fn home() {
 }
 "#;
     fs::write(format!("{}/src/urls.rs", name), urls_rs).map_err(RangoCliError::IoError)?;
+
+    let init_migration = r#"-- 0001_initial.sql
+-- Initial migration — generated by rango startproject
+-- Edit to match your models in src/models.rs
+
+CREATE TABLE IF NOT EXISTS posts (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    title     TEXT    NOT NULL,
+    body      TEXT    NOT NULL,
+    published INTEGER NOT NULL DEFAULT 0
+);
+"#;
+    fs::write(
+        format!("{}/migrations/0001_initial.sql", name),
+        init_migration,
+    ).map_err(RangoCliError::IoError)?;
 
     let base_html = r#"<!DOCTYPE html>
 <html lang="en">
@@ -90,9 +172,19 @@ pub async fn home() {
     fs::write(format!("{}/templates/welcome.html", name), welcome_html)
         .map_err(RangoCliError::IoError)?;
 
-    println!("Project '{}' created successfully.", name);
+    println!("✅ Project '{}' created!", name);
+    println!("");
     println!("  cd {}", name);
+    println!("  # Edit src/main.rs to configure your database");
     println!("  cargo run");
+    println!("");
+    println!("📁 Structure:");
+    println!("  src/main.rs           — init_config() + rango::start()");
+    println!("  src/models.rs         — #[model] structs");
+    println!("  src/urls.rs           — URL routing");
+    println!("  migrations/           — SQL migration files");
+    println!("  templates/            — Jinja2 templates");
+    println!("  .env.example          — all config variables documented");
 
     Ok(())
 }

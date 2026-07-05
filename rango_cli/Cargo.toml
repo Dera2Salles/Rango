@@ -14,5 +14,13 @@ name = "rango"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.0", features = ["derive"] }
-rango-framework = { version = "0.1.0", path = "../rango" }
+clap = { version = "4.0", features = ["derive", "env"] }
+thiserror = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+sqlx = { version = "0.7", features = [
+    "runtime-tokio-rustls",
+    "sqlite",
+    "postgres",
+    "any",
+    "migrate",
+] }

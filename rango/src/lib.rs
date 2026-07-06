@@ -4,6 +4,10 @@ pub mod middleware;
 mod not_found;
 pub mod responses;
 pub mod state;
+pub mod signals;
+pub mod validators;
+pub mod forms;
+pub mod paginator;
 
 #[cfg(feature = "auth")]
 pub mod auth;
@@ -21,12 +25,14 @@ pub use serde_json;
 
 pub use error::{RangoError, RangoResult};
 pub use responses::{
-    http_404, json_response, json_response_with_status, redirect, redirect_permanent, text_response,
+    http_404, json_response, json_response_with_status, redirect, redirect_permanent,
+    text_response, created, no_content, bad_request,
 };
 pub use state::{
     config, init_config,
     RangoConfig, DatabaseConfig, DatabaseBackend,
     RangoState, StateWrapper,
+    SessionConfig, SecurityConfig,
 };
 
 #[cfg(all(feature = "db", feature = "templates"))]
@@ -40,10 +46,14 @@ pub use db::{
     db, backend, placeholder,
     execute, init_db, query, query_as, run_migrations,
     aggregate, aggregate_float, with_transaction,
-    RangoModel, RangoSchema, QuerySet, ColumnDef,
+    RangoModel, RangoSchema, QuerySet, ColumnDef, Page, Q,
     AdminField, RangoAdminMetadata, RangoAdminOps, ModelAdmin,
 };
 
+pub use signals::{Signal, SignalRegistry};
+pub use validators::{Validator, ValidationErrors};
+pub use forms::Form;
+pub use paginator::Paginator;
 
 pub mod macros {
     pub use rango_macros::context;
@@ -63,6 +73,8 @@ pub use axum::{
 pub use serde_json::json;
 #[cfg(feature = "db")]
 pub use sqlx;
+#[cfg(feature = "auth")]
+pub use tower_sessions;
 
 use axum::middleware::from_fn;
 use axum::Router;
@@ -80,6 +92,10 @@ pub struct RangoBuilder {
     static_override: Option<(String, String)>,
     /// Override CORS from config.
     cors_override: Option<bool>,
+    /// Enable security headers middleware.
+    security_headers: bool,
+    /// Enable host validation middleware.
+    host_validation: bool,
 }
 
 impl RangoBuilder {
@@ -89,6 +105,8 @@ impl RangoBuilder {
             addr_override: None,
             static_override: None,
             cors_override: None,
+            security_headers: true,
+            host_validation: true,
         }
     }
 
@@ -107,6 +125,18 @@ impl RangoBuilder {
     /// Enable CORS for all origins (overrides `RangoConfig.cors_allow_all`).
     pub fn with_cors(mut self) -> Self {
         self.cors_override = Some(true);
+        self
+    }
+
+    /// Disable security headers middleware.
+    pub fn without_security_headers(mut self) -> Self {
+        self.security_headers = false;
+        self
+    }
+
+    /// Disable host header validation.
+    pub fn without_host_validation(mut self) -> Self {
+        self.host_validation = false;
         self
     }
 
@@ -167,14 +197,60 @@ impl RangoBuilder {
         let cors_enabled = self.cors_override.unwrap_or(cfg.cors_allow_all);
         if cors_enabled {
             self.router = self.router.layer(middleware::cors_layer());
+        } else if !cfg.cors_allowed_origins.is_empty() {
+            // Use origin-specific CORS
+            use axum::http::HeaderValue;
+            let origins: Vec<HeaderValue> = cfg
+                .cors_allowed_origins
+                .iter()
+                .filter_map(|o| o.parse().ok())
+                .collect();
+            use tower_http::cors::{Any, CorsLayer};
+            self.router = self.router.layer(
+                CorsLayer::new()
+                    .allow_methods([
+                        axum::http::Method::GET,
+                        axum::http::Method::POST,
+                        axum::http::Method::PUT,
+                        axum::http::Method::DELETE,
+                        axum::http::Method::PATCH,
+                        axum::http::Method::OPTIONS,
+                    ])
+                    .allow_headers(Any)
+                    .allow_origin(origins),
+            );
         }
 
+        // ── Sessions ──────────────────────────────────────────────────────────
         #[cfg(feature = "auth")]
         {
-            let session_store = tower_sessions::MemoryStore::default();
-            let session_layer = tower_sessions::SessionManagerLayer::new(session_store)
-                .with_secure(false); // Set to true in prod with HTTPS
+            use tower_sessions::{MemoryStore, SessionManagerLayer, cookie::SameSite};
+            let session_store = MemoryStore::default();
+            let same_site = match cfg.session.same_site.as_str() {
+                "Strict" => SameSite::Strict,
+                "None" => SameSite::None,
+                _ => SameSite::Lax,
+            };
+            let session_layer = SessionManagerLayer::new(session_store)
+                .with_secure(cfg.session.secure)
+                .with_http_only(cfg.session.http_only)
+                .with_same_site(same_site)
+                .with_name(&cfg.session.cookie_name);
             self.router = self.router.layer(session_layer);
+        }
+
+        // ── Host validation ───────────────────────────────────────────────────
+        if self.host_validation && !cfg.allowed_hosts.is_empty() {
+            self.router = self
+                .router
+                .layer(from_fn(middleware::host_validation_middleware));
+        }
+
+        // ── Security headers ──────────────────────────────────────────────────
+        if self.security_headers {
+            self.router = self
+                .router
+                .layer(from_fn(middleware::security_headers_middleware));
         }
 
         // ── Middleware stack ──────────────────────────────────────────────────
@@ -203,6 +279,10 @@ impl RangoBuilder {
             .unwrap_or_else(|e| panic!("Cannot bind Rango on {}: {}", addr, e));
 
         println!("🤠 Rango running on http://{}", addr);
+        if cfg.debug {
+            println!("   Debug mode: ON");
+            println!("   Database: {}", cfg.database_url().unwrap_or("none"));
+        }
 
         axum::serve(listener, self.router).await.unwrap();
     }

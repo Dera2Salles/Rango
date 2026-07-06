@@ -29,12 +29,29 @@ pub fn expand_view(view_attr: ViewAttr, input_fn: ItemFn) -> TokenStream2 {
     let fn_inputs    = &input_fn.sig.inputs;
     let fn_name_meta = quote::format_ident!("{}_meta", fn_name);
 
-    let method_router = match view_attr.method.as_deref() {
-        Some("POST")   => quote! { ::rango::axum::routing::post(#fn_name) },
-        Some("PUT")    => quote! { ::rango::axum::routing::put(#fn_name) },
-        Some("DELETE") => quote! { ::rango::axum::routing::delete(#fn_name) },
-        Some("PATCH")  => quote! { ::rango::axum::routing::patch(#fn_name) },
-        _              => quote! { ::rango::axum::routing::get(#fn_name) },
+    let method_router = if let Some(methods) = view_attr.method.as_deref() {
+        let mut tokens = quote! {};
+        let mut first = true;
+        for m in methods.split(',') {
+            let m = m.trim();
+            let chain = match m {
+                "POST" => quote! { post(#fn_name) },
+                "PUT" => quote! { put(#fn_name) },
+                "DELETE" => quote! { delete(#fn_name) },
+                "PATCH" => quote! { patch(#fn_name) },
+                "GET" => quote! { get(#fn_name) },
+                _ => quote! { get(#fn_name) },
+            };
+            if first {
+                tokens = quote! { ::rango::axum::routing::#chain };
+                first = false;
+            } else {
+                tokens = quote! { #tokens.#chain };
+            }
+        }
+        tokens
+    } else {
+        quote! { ::rango::axum::routing::get(#fn_name).post(#fn_name) }
     };
 
     quote! {

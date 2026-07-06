@@ -12,15 +12,16 @@ pub struct ModelAttr {
 impl Parse for ModelAttr {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut table = None;
-        if !input.is_empty() {
-            let lookahead = input.lookahead1();
-            if lookahead.peek(syn::Ident) {
-                let key: Ident = input.parse()?;
-                input.parse::<Token![=]>()?;
+        while !input.is_empty() {
+            let key: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            if key == "table" {
                 let val: LitStr = input.parse()?;
-                if key == "table" {
-                    table = Some(val.value());
-                }
+                table = Some(val.value());
+            }
+            // Ignore unknown attributes for forward compatibility
+            if input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
             }
         }
         Ok(ModelAttr { table })
@@ -31,13 +32,7 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
     let struct_name = &input_struct.ident;
     let table_name = attr.table.unwrap_or_else(|| {
         let name = struct_name.to_string().to_lowercase();
-        if name.ends_y() {
-            format!("{}ies", &name[..name.len() - 1])
-        } else if name.ends_s() {
-            format!("{}es", name)
-        } else {
-            format!("{}s", name)
-        }
+        pluralize(&name)
     });
 
     let mut id_field = quote! { id };
@@ -60,11 +55,12 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
         }
     }
 
-    // Nom du champ id en string (pour interpolation SQL)
     let id_field_name = id_field.to_string();
 
     let mut fields_names: Vec<String> = Vec::new();
     let mut fields_vars: Vec<TokenStream2> = Vec::new();
+    let mut column_defs: Vec<TokenStream2> = Vec::new();
+    let mut index_defs: Vec<TokenStream2> = Vec::new();
 
     let mut admin_fields = Vec::new();
     let mut from_form_fields = Vec::new();
@@ -75,10 +71,37 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
             if let Some(ident) = &field.ident {
                 let name = ident.to_string();
                 let ty = &field.ty;
-                let ty_str = quote! { #ty }.to_string().replace(" ", "");
+                let ty_str = quote! { #ty }.to_string().replace(' ', "");
 
                 let is_id = name == id_field_name;
                 let editable = !is_id;
+
+                // Check for rango field attributes
+                let mut is_unique = false;
+                let mut is_nullable = false;
+                let mut is_indexed = false;
+                let mut has_default: Option<String> = None;
+
+                for a in &field.attrs {
+                    if a.path().is_ident("rango") {
+                        let _ = a.parse_nested_meta(|meta| {
+                            if meta.path.is_ident("unique") {
+                                is_unique = true;
+                            } else if meta.path.is_ident("nullable") {
+                                is_nullable = true;
+                            } else if meta.path.is_ident("index") {
+                                is_indexed = true;
+                            } else if meta.path.is_ident("default") {
+                                let val: LitStr = meta.value()?.parse()?;
+                                has_default = Some(val.value());
+                            }
+                            Ok(())
+                        });
+                    }
+                }
+
+                // Determine SQL type from Rust type
+                let sql_type = rust_type_to_sql(&ty_str);
 
                 admin_fields.push(quote! {
                     ::rango::db::AdminField {
@@ -92,7 +115,37 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                     from_form_fields.push(quote! {
                         #ident: form_data.get(#name).and_then(|v| v.parse().ok()).unwrap_or(0)
                     });
+
+                    // PK column def
+                    column_defs.push(quote! {
+                        ::rango::db::ColumnDef::new(#name, "INTEGER")
+                            .primary_key()
+                    });
                 } else {
+                    // Build column def
+                    let default_val = has_default.clone().unwrap_or_default();
+                    let has_default_val = has_default.is_some();
+                    column_defs.push(quote! {
+                        {
+                            let mut col = ::rango::db::ColumnDef::new(#name, #sql_type);
+                            if #is_nullable { col = col.nullable(); }
+                            if #is_unique { col = col.unique(); }
+                            if #has_default_val { col = col.default(#default_val); }
+                            col
+                        }
+                    });
+
+                    // Index definition
+                    if is_indexed || is_unique {
+                        index_defs.push(quote! {
+                            format!(
+                                "CREATE INDEX IF NOT EXISTS idx_{}_{} ON {} ({});",
+                                #table_name, #name, #table_name, #name
+                            )
+                        });
+                    }
+
+                    // Form parsing by type
                     if ty_str == "String" {
                         from_form_fields.push(quote! {
                             #ident: form_data.get(#name).cloned().unwrap_or_default()
@@ -113,7 +166,15 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                                 .map(|v| v == "true" || v == "on" || v == "1")
                                 .unwrap_or(false);
                         });
-                    } else if ty_str == "i64" || ty_str == "i32" || ty_str == "u64" || ty_str == "u32" {
+                    } else if ty_str == "i64"
+                        || ty_str == "i32"
+                        || ty_str == "u64"
+                        || ty_str == "u32"
+                        || ty_str == "i16"
+                        || ty_str == "u16"
+                        || ty_str == "i8"
+                        || ty_str == "u8"
+                    {
                         from_form_fields.push(quote! {
                             #ident: form_data.get(#name).and_then(|v| v.parse().ok()).unwrap_or(0)
                         });
@@ -131,7 +192,7 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                                 self.#ident = val;
                             }
                         });
-                    } else if ty_str.contains("Option") {
+                    } else if ty_str.starts_with("Option") {
                         from_form_fields.push(quote! {
                             #ident: form_data.get(#name).filter(|s| !s.is_empty()).cloned()
                         });
@@ -144,7 +205,6 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                         });
                     }
 
-                    // Seulement les champs non-id vont dans INSERT/UPDATE
                     fields_names.push(name.clone());
                     fields_vars.push(quote! { self.#ident });
                 }
@@ -153,6 +213,7 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
     }
 
     let fields_names_lits: Vec<String> = fields_names.clone();
+    let table_name_lit = table_name.clone();
 
     quote! {
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
@@ -161,12 +222,15 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
         #[::rango::axum::async_trait]
         impl ::rango::db::RangoModel for #struct_name {
             fn table_name() -> &'static str {
-                #table_name
+                #table_name_lit
             }
 
             async fn save(&mut self) -> ::rango::RangoResult<()> {
                 use ::rango::db::{backend, placeholder, db};
                 use ::rango::state::DatabaseBackend;
+
+                let serialized = ::rango::serde_json::to_value(&self).unwrap_or(::rango::serde_json::Value::Null);
+                ::rango::signals::PRE_SAVE.send(&serialized);
 
                 let field_names: &[&str] = &[#(#fields_names_lits),*];
                 let backend_ref = backend()?;
@@ -182,10 +246,9 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
 
                     match backend_ref {
                         DatabaseBackend::Postgres => {
-                            // Postgres : RETURNING id pour récupérer le nouvel id
                             let q = format!(
                                 "INSERT INTO {} ({}) VALUES ({}) RETURNING {}",
-                                #table_name, cols, placeholders_str, #id_field_name
+                                #table_name_lit, cols, placeholders_str, #id_field_name
                             );
                             let row: (i64,) = ::rango::sqlx::query_as(&q)
                                 #(.bind(&#fields_vars))*
@@ -195,10 +258,9 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                             self.#id_field = row.0;
                         }
                         _ => {
-                            // SQLite / MySQL : last_insert_id()
                             let q = format!(
                                 "INSERT INTO {} ({}) VALUES ({})",
-                                #table_name, cols, placeholders_str
+                                #table_name_lit, cols, placeholders_str
                             );
                             let result = ::rango::sqlx::query(&q)
                                 #(.bind(&#fields_vars))*
@@ -222,7 +284,7 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                     let id_ph = placeholder(backend_ref, field_names.len() + 1);
                     let q = format!(
                         "UPDATE {} SET {} WHERE {} = {}",
-                        #table_name, sets.join(", "), #id_field_name, id_ph
+                        #table_name_lit, sets.join(", "), #id_field_name, id_ph
                     );
                     ::rango::sqlx::query(&q)
                         #(.bind(&#fields_vars))*
@@ -231,23 +293,32 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                         .await
                         .map_err(|e| ::rango::error::RangoError::DatabaseError(e.to_string()))?;
                 }
+
+                let final_serialized = ::rango::serde_json::to_value(&self).unwrap_or(::rango::serde_json::Value::Null);
+                ::rango::signals::POST_SAVE.send(&final_serialized);
                 Ok(())
             }
 
             async fn delete(&self) -> ::rango::RangoResult<u64> {
                 use ::rango::db::{backend, placeholder, db};
+
+                let serialized = ::rango::serde_json::to_value(&self).unwrap_or(::rango::serde_json::Value::Null);
+                ::rango::signals::PRE_DELETE.send(&serialized);
+
                 let backend_ref = backend()?;
                 let pool = db()?;
                 let ph = placeholder(backend_ref, 1);
                 let q = format!(
                     "DELETE FROM {} WHERE {} = {}",
-                    #table_name, #id_field_name, ph
+                    #table_name_lit, #id_field_name, ph
                 );
                 let result = ::rango::sqlx::query(&q)
                     .bind(self.#id_field)
                     .execute(pool)
                     .await
                     .map_err(|e| ::rango::error::RangoError::DatabaseError(e.to_string()))?;
+
+                ::rango::signals::POST_DELETE.send(&serialized);
                 Ok(result.rows_affected())
             }
         }
@@ -282,19 +353,65 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                 Ok(())
             }
         }
+
+        impl ::rango::db::RangoSchema for #struct_name {
+            fn columns() -> Vec<::rango::db::ColumnDef> {
+                vec![#(#column_defs),*]
+            }
+
+            fn generate_migration_sql() -> String {
+                let cols: Vec<String> = Self::columns().iter().map(|c| c.to_sql()).collect();
+                format!(
+                    "CREATE TABLE IF NOT EXISTS {} (\n    {}\n);",
+                    #table_name_lit,
+                    cols.join(",\n    ")
+                )
+            }
+
+            fn generate_index_sql() -> Vec<String> {
+                vec![#(#index_defs),*]
+            }
+        }
     }
 }
 
-trait StrExt {
-    fn ends_y(&self) -> bool;
-    fn ends_s(&self) -> bool;
+/// Rust type → SQL type mapping (multi-DB aware).
+fn rust_type_to_sql(ty: &str) -> &'static str {
+    match ty {
+        "String" | "&str" => "TEXT",
+        "i64" | "i32" | "i16" | "i8" | "u64" | "u32" | "u16" | "u8" | "usize" | "isize" => {
+            "INTEGER"
+        }
+        "f64" | "f32" => "REAL",
+        "bool" => "BOOLEAN",
+        t if t.contains("Option<String>") => "TEXT",
+        t if t.contains("Option<i") || t.contains("Option<u") => "INTEGER",
+        t if t.contains("Option<f") => "REAL",
+        t if t.contains("Option<bool>") => "BOOLEAN",
+        t if t.contains("Vec<u8>") => "BLOB",
+        t if t.contains("Uuid") || t.contains("uuid::Uuid") => "TEXT",
+        t if t.contains("NaiveDateTime")
+            || t.contains("DateTime")
+            || t.contains("chrono::") =>
+        {
+            "TIMESTAMP"
+        }
+        _ => "TEXT",
+    }
 }
 
-impl StrExt for String {
-    fn ends_y(&self) -> bool {
-        self.ends_with('y')
-    }
-    fn ends_s(&self) -> bool {
-        self.ends_with('s')
+/// Pluralize a lowercase model name.
+fn pluralize(name: &str) -> String {
+    if name.ends_with('y') && !name.ends_with("ay") && !name.ends_with("ey") {
+        format!("{}ies", &name[..name.len() - 1])
+    } else if name.ends_with('s')
+        || name.ends_with('x')
+        || name.ends_with('z')
+        || name.ends_with("ch")
+        || name.ends_with("sh")
+    {
+        format!("{}es", name)
+    } else {
+        format!("{}s", name)
     }
 }

@@ -278,7 +278,7 @@ impl RangoBuilder {
             .await
             .unwrap_or_else(|e| panic!("Cannot bind Rango on {}: {}", addr, e));
 
-        println!("🤠 Rango running on http://{}", addr);
+        println!("Rango running on http://{}", addr);
         if cfg.debug {
             println!("   Debug mode: ON");
             println!("   Database: {}", cfg.database_url().unwrap_or("none"));

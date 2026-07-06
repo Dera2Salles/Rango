@@ -177,9 +177,9 @@ impl IntoResponse for RangoError {
 </head>
 <body>
   <div class="container">
-    <h1>🤠</h1>
-    <div class="badge">HTTP {code}</div>
-    <h2>{title}</h2>
+    <h1>{code}</h1>
+    <div class="badge">{title}</div>
+    <h2>An error occurred</h2>
     <p>{msg}</p>
     <a href="/">← Back to Home</a>
   </div>

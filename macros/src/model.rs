@@ -225,6 +225,18 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                 #table_name_lit
             }
 
+            fn id_column() -> &'static str {
+                #id_field_name
+            }
+
+            fn pk(&self) -> i64 {
+                self.#id_field
+            }
+
+            fn set_pk(&mut self, id: i64) {
+                self.#id_field = id;
+            }
+
             async fn save(&mut self) -> ::rango::RangoResult<()> {
                 use ::rango::db::{backend, placeholder, db};
                 use ::rango::state::DatabaseBackend;
@@ -390,10 +402,7 @@ fn rust_type_to_sql(ty: &str) -> &'static str {
         t if t.contains("Option<bool>") => "BOOLEAN",
         t if t.contains("Vec<u8>") => "BLOB",
         t if t.contains("Uuid") || t.contains("uuid::Uuid") => "TEXT",
-        t if t.contains("NaiveDateTime")
-            || t.contains("DateTime")
-            || t.contains("chrono::") =>
-        {
+        t if t.contains("NaiveDateTime") || t.contains("DateTime") || t.contains("chrono::") => {
             "TIMESTAMP"
         }
         _ => "TEXT",

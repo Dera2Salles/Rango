@@ -2,6 +2,6 @@
 members = [
     "rango",
     "macros",
-    "rango_cli",
+    "cli",
 ]
 resolver = "2"

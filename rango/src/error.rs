@@ -112,7 +112,9 @@ impl IntoResponse for RangoError {
                 RangoError::BadRequest(msg) => msg.clone(),
                 RangoError::ValidationError(msg) => format!("Validation error: {}", msg),
                 RangoError::Unauthorized => "Authentication required.".to_string(),
-                RangoError::Forbidden => "You do not have permission to access this resource.".to_string(),
+                RangoError::Forbidden => {
+                    "You do not have permission to access this resource.".to_string()
+                }
                 RangoError::RateLimited => "Too many requests. Please slow down.".to_string(),
                 _ => self.to_string(),
             }
@@ -133,13 +135,12 @@ impl IntoResponse for RangoError {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rango — Error {code}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     *, *::before, *::after {{ box-sizing: border-box; }}
     body {{
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, system-ui, "Segoe UI", Roboto, "Inter", sans-serif;
       padding: 2rem;
-      background: #0f172a;
-      color: #f8fafc;
+      background: #0b1220;
+      color: #f1f5f9;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -148,13 +149,13 @@ impl IntoResponse for RangoError {
       margin: 0;
     }}
     .container {{ max-width: 600px; text-align: center; }}
-    h1 {{ color: #e94560; font-size: 5rem; margin: 0; line-height: 1; }}
+    h1 {{ color: #f43f5e; font-size: 5rem; font-weight: 700; margin: 0; line-height: 1; }}
     h2 {{ color: #94a3b8; font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0; }}
     p {{ color: #64748b; font-size: 1rem; line-height: 1.6; margin: 1rem 0; }}
     .badge {{
       display: inline-block;
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: #1a2333;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 6px;
       padding: 0.25rem 0.75rem;
       font-size: 0.8rem;
@@ -163,16 +164,15 @@ impl IntoResponse for RangoError {
     }}
     a {{
       display: inline-block;
-      color: #f8fafc;
-      background: #e94560;
+      color: #f1f5f9;
+      background: #6366f1;
       text-decoration: none;
       font-weight: 600;
       padding: 0.6rem 1.5rem;
       border-radius: 8px;
       margin-top: 1.5rem;
-      transition: opacity 0.2s;
     }}
-    a:hover {{ opacity: 0.85; }}
+    a:hover {{ background: #4f46e5; }}
   </style>
 </head>
 <body>

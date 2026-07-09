@@ -8,15 +8,21 @@
 
 Rango is a lightweight, ergonomic web framework built on top of Axum. It is carefully designed to provide a productive, Django-like development experience in Rust, eliminating boilerplate while maintaining bare-metal performance.
 
+📖 **[Full documentation is in `docs/`](docs/README.md)** — routing, templates, the ORM, the admin panel, forms, auth, messages/caching, middleware, signals, configuration, and the CLI.
+
 ---
 
 ## Key Features
 
 - **Django-Inspired Routing ️**: Centralize your URLs in a single, clean file using the `urls!` macro. Support for nested sub-routers via `include` and `path`.
 - **Simplified View Handling ️**: Write clean, asynchronous handlers using `#[view]` attributes. Let Rango manage the underlying Axum routing plumbing.
-- **On-Demand Database Support ️**: Seamless database integration with compile-time query validation, completely optional and feature-gated.
+- **Feature-Rich, Easy ORM ️**: A Django-like `QuerySet` with safely-parameterized typed filters (`filter_eq`, `filter_icontains`, `filter_in`, ...), aggregates (`sum`, `avg`, `min_of`, `max_of`), pagination, `get_or_create`/`update_or_create`, bulk operations, and multi-database support (SQLite/PostgreSQL/MySQL) via a single `Any`-backed pool — completely optional and feature-gated.
+- **Auto-Generated Admin Panel 🛠️**: Register a model and get a themed CRUD UI with search, pagination, and bulk delete for free.
+- **Django-style Extras**: Flash messages (`rango::messages`), an in-memory cache (`rango::cache`), signals (`PRE_SAVE`/`POST_SAVE`/...), a `Form`/`Validator` toolkit, and Django-flavored template filters (`pluralize`, `intcomma`, `truncatewords`, `yesno`, ...).
 - **Ergonomic Contexts **: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
 - **Blazing Fast Compilation 🚀**: Highly modular design. If you don't use the database or templates, they aren't compiled. Keep your binary lightweight.
+
+📖 See the [full documentation](docs/README.md) for details on every feature above.
 
 ---
 
@@ -237,6 +243,10 @@ let router = urls::get_rango_router()
 - `rango runserver`: Starts the project using `cargo run` with environment defaults.
 
 ---
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, coding guidelines, and PR workflow before opening a pull request.
 
 ## License
 

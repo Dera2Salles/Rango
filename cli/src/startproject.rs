@@ -18,7 +18,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rango = {{ version = "0.1.0", package = "rango-framework", features = ["db", "templates"] }}
+rango = {{ version = "0.1.0", package = "rango-framework", features = ["db", "templates, auth"] }}
 serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
 sqlx = {{ version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "any", "migrate"] }}
@@ -32,7 +32,8 @@ tokio = {{ version = "1.0", features = ["full"] }}
     fs::write(
         format!("{}/.gitignore", name),
         "/target\n**/*.rs.bk\nCargo.lock\n.env\n.env.local\n*.db\n*.db-shm\n*.db-wal\n",
-    ).map_err(RangoCliError::IoError)?;
+    )
+    .map_err(RangoCliError::IoError)?;
 
     let env_example = r#"# ── Server ────────────────────────────────────────────────
 RANGO_ADDR=127.0.0.1:8000
@@ -151,7 +152,8 @@ CREATE TABLE IF NOT EXISTS posts (
     fs::write(
         format!("{}/migrations/0001_initial.sql", name),
         init_migration,
-    ).map_err(RangoCliError::IoError)?;
+    )
+    .map_err(RangoCliError::IoError)?;
 
     let base_html = r#"<!DOCTYPE html>
 <html lang="en">

@@ -1,21 +1,40 @@
-use std::collections::HashMap;
-use std::sync::Arc;
 use axum::{
-    extract::{Form, Path, State},
+    extract::{Form, Path, Query, State},
     http::StatusCode,
     response::{Html, IntoResponse},
     routing::{get, post},
     Router,
 };
+use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::db::RangoAdminOps;
 use crate::error::RangoError;
+use crate::paginator::Paginator;
 use crate::responses::redirect;
+
+/// Query parameters accepted by the admin model-list view: `?page=1&per_page=25&q=search`.
+#[derive(Debug, serde::Deserialize)]
+struct AdminListQuery {
+    #[serde(default = "default_admin_page")]
+    page: u64,
+    #[serde(default = "default_admin_per_page")]
+    per_page: u64,
+    #[serde(default)]
+    q: Option<String>,
+}
+
+fn default_admin_page() -> u64 {
+    1
+}
+
+fn default_admin_per_page() -> u64 {
+    25
+}
 
 // ─── Environment ─────────────────────────────────────────────────────────────
 
-static ADMIN_ENV: std::sync::OnceLock<minijinja::Environment<'static>> =
-    std::sync::OnceLock::new();
+static ADMIN_ENV: std::sync::OnceLock<minijinja::Environment<'static>> = std::sync::OnceLock::new();
 
 fn get_admin_env() -> &'static minijinja::Environment<'static> {
     ADMIN_ENV.get_or_init(|| {
@@ -39,6 +58,7 @@ fn get_admin_env() -> &'static minijinja::Environment<'static> {
             include_str!("templates/admin_model_form.html"),
         )
         .unwrap();
+        crate::template_filters::register(&mut env);
         env
     })
 }
@@ -56,7 +76,11 @@ fn render_admin(template_name: &str, ctx: serde_json::Value) -> Result<Html<Stri
 }
 
 fn get_sidebar_context(admin: &RangoAdmin) -> Vec<String> {
-    admin.models.iter().map(|m| m.model_name().to_string()).collect()
+    admin
+        .models
+        .iter()
+        .map(|m| m.model_name().to_string())
+        .collect()
 }
 
 // ─── RangoAdmin Site Registrar ───────────────────────────────────────────────
@@ -75,7 +99,8 @@ impl RangoAdmin {
     where
         T: crate::db::RangoModel + crate::db::RangoAdminMetadata + Send + Sync + 'static,
     {
-        self.models.push(Arc::new(crate::db::ModelAdmin::<T>::new()));
+        self.models
+            .push(Arc::new(crate::db::ModelAdmin::<T>::new()));
     }
 
     pub fn router(self) -> Router {
@@ -92,6 +117,7 @@ impl RangoAdmin {
                 get(admin_model_edit).post(admin_model_edit_submit),
             )
             .route("/:model_name/:id/delete", post(admin_model_delete))
+            .route("/:model_name/bulk-delete", post(admin_model_bulk_delete))
             .with_state(admin_state)
     }
 }
@@ -130,6 +156,7 @@ async fn admin_dashboard(State(admin): State<Arc<RangoAdmin>>) -> impl IntoRespo
 async fn admin_model_list(
     State(admin): State<Arc<RangoAdmin>>,
     Path(model_name): Path<String>,
+    Query(params): Query<AdminListQuery>,
 ) -> impl IntoResponse {
     let model = match admin
         .models
@@ -140,10 +167,16 @@ async fn admin_model_list(
         None => return StatusCode::NOT_FOUND.into_response(),
     };
 
-    let items = match model.list().await {
-        Ok(it) => it,
+    let page = params.page.max(1);
+    let per_page = params.per_page.clamp(1, 200);
+    let q = params.q.filter(|s| !s.trim().is_empty());
+
+    let (items, total) = match model.list_paginated(page, per_page, q.as_deref()).await {
+        Ok(v) => v,
         Err(e) => return e.into_response(),
     };
+
+    let paginator = Paginator::new(page, per_page, total);
 
     let fields = model.fields();
     let sidebar = get_sidebar_context(&admin);
@@ -154,6 +187,8 @@ async fn admin_model_list(
             "model_name": model.model_name(),
             "fields": fields,
             "items": items,
+            "paginator": paginator.to_json(),
+            "search_query": q.unwrap_or_default(),
         }),
     ) {
         Ok(html) => html.into_response(),
@@ -281,6 +316,37 @@ async fn admin_model_delete(
     };
 
     match model.delete(id).await {
+        Ok(_) => redirect(&format!("/admin/{}", model.model_name())).into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+/// Bulk-delete selected rows. Expects a form field `ids` containing a
+/// comma-separated list of primary keys (built client-side from checkboxes).
+async fn admin_model_bulk_delete(
+    State(admin): State<Arc<RangoAdmin>>,
+    Path(model_name): Path<String>,
+    Form(form_data): Form<HashMap<String, String>>,
+) -> impl IntoResponse {
+    let model = match admin
+        .models
+        .iter()
+        .find(|m| m.model_name().eq_ignore_ascii_case(&model_name))
+    {
+        Some(m) => m,
+        None => return StatusCode::NOT_FOUND.into_response(),
+    };
+
+    let ids: Vec<i64> = form_data
+        .get("ids")
+        .map(|s| {
+            s.split(',')
+                .filter_map(|x| x.trim().parse::<i64>().ok())
+                .collect()
+        })
+        .unwrap_or_default();
+
+    match model.bulk_delete(ids).await {
         Ok(_) => redirect(&format!("/admin/{}", model.model_name())).into_response(),
         Err(e) => e.into_response(),
     }

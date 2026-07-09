@@ -17,6 +17,7 @@ fn build_env() -> minijinja::Environment<'static> {
     ));
     // Enable useful built-ins
     env.set_undefined_behavior(minijinja::UndefinedBehavior::Chainable);
+    crate::template_filters::register(&mut env);
     env
 }
 
@@ -29,6 +30,7 @@ fn build_env() -> &'static minijinja::Environment<'static> {
         let mut env = minijinja::Environment::new();
         minijinja::include_source_bundle!(env, "templates");
         env.set_undefined_behavior(minijinja::UndefinedBehavior::Chainable);
+        crate::template_filters::register(&mut env);
         env
     })
 }

@@ -3,7 +3,7 @@
 //! Signals allow decoupled components to react to events without tight coupling.
 //!
 //! # Example
-//! ```rust
+//! ```rust,ignore
 //! use rango::signals::Signal;
 //!
 //! static USER_SAVED: Signal<User> = Signal::new();

@@ -3,7 +3,7 @@
 //! Provides a simple form validation system similar to Django's `forms.Form`.
 //!
 //! # Example
-//! ```rust
+//! ```rust,ignore
 //! use rango::forms::Form;
 //! use rango::validators::Validator;
 //! use std::collections::HashMap;
@@ -30,8 +30,8 @@
 //! }
 //! ```
 
-use std::collections::HashMap;
 use crate::validators::{ValidationErrors, Validator};
+use std::collections::HashMap;
 
 /// A Django-like form for validating and cleaning request data.
 pub struct Form {

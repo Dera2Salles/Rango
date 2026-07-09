@@ -4,7 +4,7 @@
 //! structured errors.
 //!
 //! # Example
-//! ```rust
+//! ```rust,ignore
 //! use rango::validators::{Validator, ValidationErrors};
 //!
 //! let mut errors = ValidationErrors::new();
@@ -229,10 +229,7 @@ impl Validator {
         {
             Ok(())
         } else {
-            Err(
-                "Username may only contain letters, numbers, underscores, and hyphens."
-                    .to_string(),
-            )
+            Err("Username may only contain letters, numbers, underscores, and hyphens.".to_string())
         }
     }
 

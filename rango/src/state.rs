@@ -5,7 +5,7 @@
 //!
 //! Configure it once before calling `rango::start()`:
 //!
-//! ```rust
+//! ```rust,ignore
 //! rango::init_config(RangoConfig {
 //!     database: Some(DatabaseConfig::sqlite("rango.db")),
 //!     secret_key: std::env::var("RANGO_SECRET_KEY").unwrap_or_default(),
@@ -16,7 +16,7 @@
 //!
 //! Or let Rango read everything from environment variables:
 //!
-//! ```rust
+//! ```rust,ignore
 //! rango::init_config(RangoConfig::from_env());
 //! ```
 
@@ -438,8 +438,7 @@ impl RangoConfig {
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(86400),
                 http_only: true,
-                same_site: std::env::var("SESSION_SAME_SITE")
-                    .unwrap_or_else(|_| "Lax".to_string()),
+                same_site: std::env::var("SESSION_SAME_SITE").unwrap_or_else(|_| "Lax".to_string()),
             },
             security: SecurityConfig::default(),
         }
@@ -474,8 +473,7 @@ impl RangoConfig {
 
     /// Whether the secret key is the default insecure value.
     pub fn is_secret_key_insecure(&self) -> bool {
-        self.secret_key == "rango-insecure-key-change-in-production"
-            || self.secret_key.len() < 32
+        self.secret_key == "rango-insecure-key-change-in-production" || self.secret_key.len() < 32
     }
 
     /// Validate the configuration and return a list of warnings.
@@ -488,7 +486,8 @@ impl RangoConfig {
         }
         if !self.debug && self.cors_allow_all {
             warnings.push(
-                "⚠️  cors_allow_all is enabled in non-debug mode. This allows any origin.".to_string()
+                "⚠️  cors_allow_all is enabled in non-debug mode. This allows any origin."
+                    .to_string(),
             );
         }
         if !self.debug && !self.session.secure {

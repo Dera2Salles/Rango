@@ -6,42 +6,31 @@
 
 {% block extra_css %}
 <style>
-    .welcome-card {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 30px;
-        margin-bottom: 30px;
+    .page-header {
+        margin-bottom: 24px;
     }
 
-    .welcome-card h1 {
-        font-size: 2rem;
+    .page-header h1 {
+        font-size: 1.35rem;
         font-weight: 700;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
-    .welcome-card p {
-        color: var(--text-secondary);
-        font-size: 1.1rem;
+    .page-header p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
     }
 
     .grid-models {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
     }
 
     .model-card {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 180px;
-        transition: transform 0.2s, border-color 0.2s;
-    }
-
-    .model-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(99, 102, 241, 0.4);
     }
 
     .model-card-header {
@@ -51,90 +40,117 @@
     }
 
     .model-card-title {
-        font-size: 1.35rem;
+        font-size: 1.1rem;
         font-weight: 600;
     }
 
     .model-card-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background-color: rgba(99, 102, 241, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background-color: var(--accent-light);
         color: var(--accent);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.25rem;
     }
 
     .model-card-count {
-        font-size: 2rem;
+        font-size: 1.75rem;
         font-weight: 700;
-        margin-top: 15px;
+        margin-top: 14px;
     }
 
     .model-card-count-label {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
+        font-size: 0.78rem;
+        color: var(--text-faint);
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.05em;
     }
 
     .model-card-actions {
         display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 15px;
-        border-top: 1px solid var(--border-color);
-        padding-top: 15px;
+        gap: 16px;
+        margin-top: 16px;
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
     }
 
     .model-card-actions a {
-        color: var(--accent);
+        color: var(--text-2);
         text-decoration: none;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 500;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
     }
 
     .model-card-actions a:hover {
-        color: var(--accent-hover);
-        text-decoration: underline;
+        color: var(--accent);
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 48px 24px;
+        color: var(--text-muted);
+    }
+
+    .empty-state .icon {
+        width: 32px;
+        height: 32px;
+        color: var(--text-faint);
+        margin: 0 auto 12px;
+    }
+
+    .empty-state h2 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+    }
+
+    .empty-state code {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 5px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="welcome-card">
-    <h1>Welcome to <span class="text-gradient">Rango Admin</span></h1>
-    <p>Manage your application data, database records, and site configurations effortlessly.</p>
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Manage your application's data and database records.</p>
 </div>
 
 <div class="grid-models">
     {% for model in models %}
-    <div class="glass-card model-card">
+    <div class="card model-card">
         <div class="model-card-header">
             <div>
                 <div class="model-card-title">{{ model.name }}</div>
-                <div class="model-card-count">{{ model.count }}</div>
-                <div class="model-card-count-label">total records</div>
+                <div class="model-card-count">{{ model.count|intcomma }}</div>
+                <div class="model-card-count-label">total record{{ model.count|pluralize }}</div>
             </div>
             <div class="model-card-icon">
-                <i class="fa-solid fa-table"></i>
+                <svg class="icon"><use href="#i-table"></use></svg>
             </div>
         </div>
         <div class="model-card-actions">
-            <a href="/admin/{{ model.name }}"><i class="fa-solid fa-list"></i> View list</a>
-            <a href="/admin/{{ model.name }}/add" style="margin-left: 15px;"><i class="fa-solid fa-plus"></i> Add new</a>
+            <a href="/admin/{{ model.name }}"><svg class="icon"><use href="#i-list"></use></svg> View list</a>
+            <a href="/admin/{{ model.name }}/add"><svg class="icon"><use href="#i-plus"></use></svg> Add new</a>
         </div>
     </div>
     {% else %}
-    <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-        <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 15px;"></i>
+    <div class="empty-state">
+        <svg class="icon"><use href="#i-alert-triangle"></use></svg>
         <h2>No models registered</h2>
-        <p style="color: var(--text-secondary); margin-top: 5px;">Register your models with <code>rango_admin.register::&lt;Model&gt;()</code> to manage them here.</p>
+        <p>Register your models with <code>admin.register::&lt;Model&gt;()</code> to manage them here.</p>
     </div>
     {% endfor %}
 </div>

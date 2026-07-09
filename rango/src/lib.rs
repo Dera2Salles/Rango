@@ -1,18 +1,21 @@
+pub mod cache;
 mod debug;
 pub mod error;
+pub mod forms;
 pub mod middleware;
 mod not_found;
-pub mod responses;
-pub mod state;
-pub mod signals;
-pub mod validators;
-pub mod forms;
 pub mod paginator;
+pub mod responses;
+pub mod signals;
+pub mod state;
+pub mod validators;
 
 #[cfg(feature = "auth")]
 pub mod auth;
 #[cfg(feature = "auth")]
 pub mod csrf;
+#[cfg(feature = "auth")]
+pub mod messages;
 
 #[cfg(feature = "db")]
 pub mod db;
@@ -20,19 +23,20 @@ pub mod db;
 #[cfg(all(feature = "db", feature = "templates"))]
 pub mod admin;
 
+#[cfg(feature = "templates")]
+pub mod template_filters;
+
 pub use serde;
 pub use serde_json;
 
 pub use error::{RangoError, RangoResult};
 pub use responses::{
-    http_404, json_response, json_response_with_status, redirect, redirect_permanent,
-    text_response, created, no_content, bad_request,
+    bad_request, created, http_404, json_response, json_response_with_status, no_content, redirect,
+    redirect_permanent, text_response,
 };
 pub use state::{
-    config, init_config,
-    RangoConfig, DatabaseConfig, DatabaseBackend,
-    RangoState, StateWrapper,
-    SessionConfig, SecurityConfig,
+    config, init_config, DatabaseBackend, DatabaseConfig, RangoConfig, RangoState, SecurityConfig,
+    SessionConfig, StateWrapper,
 };
 
 #[cfg(all(feature = "db", feature = "templates"))]
@@ -43,17 +47,19 @@ pub use responses::render;
 
 #[cfg(feature = "db")]
 pub use db::{
-    db, backend, placeholder,
-    execute, init_db, query, query_as, run_migrations,
-    aggregate, aggregate_float, with_transaction,
-    RangoModel, RangoSchema, QuerySet, ColumnDef, Page, Q,
-    AdminField, RangoAdminMetadata, RangoAdminOps, ModelAdmin,
+    aggregate, aggregate_float, backend, db, execute, init_db, placeholder, query, query_as,
+    run_migrations, with_transaction, AdminField, ColumnDef, ModelAdmin, Page, QuerySet,
+    RangoAdminMetadata, RangoAdminOps, RangoModel, RangoSchema, SqlValue, Q,
 };
 
-pub use signals::{Signal, SignalRegistry};
-pub use validators::{Validator, ValidationErrors};
+pub use cache::{cache, Cache};
 pub use forms::Form;
 pub use paginator::Paginator;
+pub use signals::{Signal, SignalRegistry};
+pub use validators::{ValidationErrors, Validator};
+
+#[cfg(feature = "auth")]
+pub use messages::{Message, MessageLevel};
 
 pub mod macros {
     pub use rango_macros::context;
@@ -147,14 +153,13 @@ impl RangoBuilder {
 
         tracing_subscriber::fmt()
             .with_env_filter(
-                tracing_subscriber::EnvFilter::try_from_default_env()
-                    .unwrap_or_else(|_| {
-                        if cfg.debug {
-                            "rango=debug,tower_http=debug".into()
-                        } else {
-                            "rango=info,tower_http=warn".into()
-                        }
-                    }),
+                tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                    if cfg.debug {
+                        "rango=debug,tower_http=debug".into()
+                    } else {
+                        "rango=info,tower_http=warn".into()
+                    }
+                }),
             )
             .init();
 
@@ -224,7 +229,7 @@ impl RangoBuilder {
         // ── Sessions ──────────────────────────────────────────────────────────
         #[cfg(feature = "auth")]
         {
-            use tower_sessions::{MemoryStore, SessionManagerLayer, cookie::SameSite};
+            use tower_sessions::{cookie::SameSite, MemoryStore, SessionManagerLayer};
             let session_store = MemoryStore::default();
             let same_site = match cfg.session.same_site.as_str() {
                 "Strict" => SameSite::Strict,

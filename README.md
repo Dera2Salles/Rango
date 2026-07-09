@@ -32,7 +32,7 @@ Rango is a lightweight, ergonomic web framework built on top of Axum. It is care
 rango_workspace/
 ├── rango/           # Core framework library (State, Middleware, Responses)
 ├── macros/          # Procedural macros (view, urls, context)
-├── rango_cli/       # CLI tool for scaffolding projects and apps
+├── cli/       # CLI tool for scaffolding projects and apps
 └── docs/            # Documentation assets
 ```
 
@@ -58,7 +58,7 @@ tokio = {{ version = "1.0", features = ["full"] }}
 To use the `rango` command-line tool for scaffolding:
 
 ```bash
-cargo install --path rango_cli
+cargo install --path cli
 ```
 
 ---

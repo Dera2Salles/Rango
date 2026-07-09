@@ -6,7 +6,7 @@ Install once from the workspace root:
 cargo install --path cli
 ```
 
-This builds and installs the `rango` binary (package `rango_cli`).
+This builds and installs the `rango` binary (package `rango-cli`).
 
 ## `rango startproject <name>`
 

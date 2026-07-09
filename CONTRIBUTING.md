@@ -46,7 +46,7 @@ Rango/
 │       └── static/              # Embedded 404 / debug pages
 ├── macros/    # Procedural macros: #[model], #[view], #[login_required], urls!, context!
 │   └── src/
-├── cli/       # The `rango` CLI binary (package `rango_cli`)
+├── cli/       # The `rango` CLI binary (package `rango-cli`)
 │   └── src/
 └── docs/      # User-facing documentation (docs/README.md is the index)
 ```
@@ -155,7 +155,7 @@ Open a GitHub issue with:
 
 ## Proposing Features
 
-Rango's north star is *"Django's productivity, Rust's performance and safety."* When proposing a new feature (especially a new Django-parity feature), briefly describe:
+Rango's north star is _"Django's productivity, Rust's performance and safety."_ When proposing a new feature (especially a new Django-parity feature), briefly describe:
 
 - The Django equivalent (if any) and how closely you intend to mirror its API.
 - Which crate/module it belongs in, and which feature flag (if any) should gate it.

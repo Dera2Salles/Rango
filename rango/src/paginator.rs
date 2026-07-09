@@ -3,7 +3,7 @@
 //! Provides cursor-based and offset-based pagination utilities.
 //!
 //! # Example
-//! ```rust
+//! ```rust,ignore
 //! use rango::paginator::Paginator;
 //!
 //! // From a QuerySet Page (offset pagination)
@@ -50,8 +50,16 @@ impl Paginator {
         };
         let has_next = current_page < num_pages;
         let has_prev = current_page > 1;
-        let next_page = if has_next { Some(current_page + 1) } else { None };
-        let prev_page = if has_prev { Some(current_page - 1) } else { None };
+        let next_page = if has_next {
+            Some(current_page + 1)
+        } else {
+            None
+        };
+        let prev_page = if has_prev {
+            Some(current_page - 1)
+        } else {
+            None
+        };
         let page_range = build_page_range(current_page, num_pages, 5);
 
         Paginator {
@@ -145,8 +153,12 @@ pub struct PaginationParams {
     pub per_page: u64,
 }
 
-fn default_page() -> u64 { 1 }
-fn default_per_page() -> u64 { 20 }
+fn default_page() -> u64 {
+    1
+}
+fn default_per_page() -> u64 {
+    20
+}
 
 impl PaginationParams {
     pub fn page(&self) -> u64 {

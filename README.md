@@ -56,7 +56,7 @@ tokio = { version = "1.0", features = ["full"] }
 To use the `rango` command-line tool for scaffolding:
 
 ```bash
-cargo install --path cli
+cargo install rango-cli
 ```
 
 ---

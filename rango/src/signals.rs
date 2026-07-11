@@ -119,7 +119,6 @@ impl Default for SignalRegistry {
     }
 }
 
-// ─── Pre-defined framework signals ────────────────────────────────────────────
 
 /// Pre-save signal — fired before a model is saved to the database.
 pub static PRE_SAVE: Signal<serde_json::Value> = Signal::new();

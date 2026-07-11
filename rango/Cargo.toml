@@ -31,10 +31,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tower = { version = "0.4", features = ["full"] }
 tower-http = { version = "0.5", features = ["fs", "cors", "trace"] }
 
-# Templates (optional)
 minijinja = { version = "2.21", features = ["loader", "json"], optional = true }
 
-# Database (optional — supports SQLite, PostgreSQL, MySQL/MariaDB)
 sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls",
     "sqlite",
@@ -48,15 +46,12 @@ sqlx = { version = "0.8", features = [
     "json",
 ], optional = true }
 
-# Auth / sessions (optional)
 tower-sessions = { version = "0.12", optional = true }
 argon2 = { version = "0.5", optional = true }
 rand = { version = "0.8", optional = true }
 
-# Security — constant-time comparison for CSRF tokens
 subtle = { version = "2.6", optional = true }
 
-# Hex encoding for CSRF tokens and random token generation
 hex = { version = "0.4", optional = true }
 
 [dev-dependencies]

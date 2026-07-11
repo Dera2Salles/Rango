@@ -88,7 +88,6 @@ use tower_http::trace::TraceLayer;
 
 use crate::not_found::default_404_handler;
 
-// ─── RangoBuilder ─────────────────────────────────────────────────────────────
 
 pub struct RangoBuilder {
     router: Router,
@@ -163,7 +162,6 @@ impl RangoBuilder {
             )
             .init();
 
-        // ── Database ──────────────────────────────────────────────────────────
         #[cfg(feature = "db")]
         if let Some(ref db_cfg) = cfg.database {
             let backend = db_cfg.backend();
@@ -186,7 +184,6 @@ impl RangoBuilder {
             }
         }
 
-        // ── Static files ──────────────────────────────────────────────────────
         let static_cfg = self.static_override.or_else(|| {
             cfg.static_dir
                 .as_ref()
@@ -198,12 +195,10 @@ impl RangoBuilder {
                 .nest_service(&prefix, middleware::static_files_service(&path));
         }
 
-        // ── CORS ──────────────────────────────────────────────────────────────
         let cors_enabled = self.cors_override.unwrap_or(cfg.cors_allow_all);
         if cors_enabled {
             self.router = self.router.layer(middleware::cors_layer());
         } else if !cfg.cors_allowed_origins.is_empty() {
-            // Use origin-specific CORS
             use axum::http::HeaderValue;
             let origins: Vec<HeaderValue> = cfg
                 .cors_allowed_origins
@@ -226,7 +221,6 @@ impl RangoBuilder {
             );
         }
 
-        // ── Sessions ──────────────────────────────────────────────────────────
         #[cfg(feature = "auth")]
         {
             use tower_sessions::{cookie::SameSite, MemoryStore, SessionManagerLayer};
@@ -244,21 +238,18 @@ impl RangoBuilder {
             self.router = self.router.layer(session_layer);
         }
 
-        // ── Host validation ───────────────────────────────────────────────────
         if self.host_validation && !cfg.allowed_hosts.is_empty() {
             self.router = self
                 .router
                 .layer(from_fn(middleware::host_validation_middleware));
         }
 
-        // ── Security headers ──────────────────────────────────────────────────
         if self.security_headers {
             self.router = self
                 .router
                 .layer(from_fn(middleware::security_headers_middleware));
         }
 
-        // ── Middleware stack ──────────────────────────────────────────────────
         self.router = self
             .router
             .layer(from_fn(middleware::logger_middleware))
@@ -272,7 +263,6 @@ impl RangoBuilder {
                 .layer(from_fn(crate::debug::debug_error_middleware));
         }
 
-        // ── Bind & serve ──────────────────────────────────────────────────────
         let addr = self
             .addr_override
             .as_deref()
@@ -293,7 +283,6 @@ impl RangoBuilder {
     }
 }
 
-// ─── Entry points ─────────────────────────────────────────────────────────────
 
 /// Start the server using settings from `RangoConfig`.
 pub fn start(router: Router) -> RangoBuilder {

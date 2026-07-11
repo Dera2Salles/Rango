@@ -19,7 +19,6 @@ impl Parse for ModelAttr {
                 let val: LitStr = input.parse()?;
                 table = Some(val.value());
             }
-            // Ignore unknown attributes for forward compatibility
             if input.peek(Token![,]) {
                 input.parse::<Token![,]>()?;
             }
@@ -76,7 +75,6 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                 let is_id = name == id_field_name;
                 let editable = !is_id;
 
-                // Check for rango field attributes
                 let mut is_unique = false;
                 let mut is_nullable = false;
                 let mut is_indexed = false;
@@ -100,7 +98,6 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                     }
                 }
 
-                // Determine SQL type from Rust type
                 let sql_type = rust_type_to_sql(&ty_str);
 
                 admin_fields.push(quote! {
@@ -116,13 +113,11 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                         #ident: form_data.get(#name).and_then(|v| v.parse().ok()).unwrap_or(0)
                     });
 
-                    // PK column def
                     column_defs.push(quote! {
                         ::rango::db::ColumnDef::new(#name, "INTEGER")
                             .primary_key()
                     });
                 } else {
-                    // Build column def
                     let default_val = has_default.clone().unwrap_or_default();
                     let has_default_val = has_default.is_some();
                     column_defs.push(quote! {
@@ -135,7 +130,6 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                         }
                     });
 
-                    // Index definition
                     if is_indexed || is_unique {
                         index_defs.push(quote! {
                             format!(
@@ -145,7 +139,6 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                         });
                     }
 
-                    // Form parsing by type
                     if ty_str == "String" {
                         from_form_fields.push(quote! {
                             #ident: form_data.get(#name).cloned().unwrap_or_default()
@@ -249,7 +242,6 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                 let pool = db()?;
 
                 if self.#id_field == 0 {
-                    // ─── INSERT ───
                     let cols = field_names.join(", ");
                     let placeholders: Vec<String> = (1..=field_names.len())
                         .map(|i| placeholder(backend_ref, i))
@@ -285,7 +277,6 @@ pub fn expand_model(attr: ModelAttr, input_struct: ItemStruct) -> TokenStream2 {
                         }
                     }
                 } else {
-                    // ─── UPDATE ───
                     let sets: Vec<String> = field_names
                         .iter()
                         .enumerate()

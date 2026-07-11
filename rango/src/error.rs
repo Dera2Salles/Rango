@@ -103,7 +103,6 @@ impl IntoResponse for RangoError {
         let status = self.status_code();
         let debug = crate::state::config().debug;
 
-        // In production, don't expose server error details
         let user_message = if status.is_server_error() && !debug {
             "An internal server error occurred.".to_string()
         } else {
@@ -120,7 +119,6 @@ impl IntoResponse for RangoError {
             }
         };
 
-        // Log server errors
         if status.is_server_error() {
             tracing::error!("Server error [{}]: {}", status.as_u16(), self);
         } else if status.is_client_error() {
@@ -191,7 +189,6 @@ impl IntoResponse for RangoError {
         ));
 
         let mut res = (status, body).into_response();
-        // Store the error in extensions for the debug middleware
         res.extensions_mut().insert(self);
         res
     }

@@ -5,7 +5,6 @@ use axum::response::{Html, IntoResponse, Response};
 use crate::error::RangoError;
 use crate::RangoError;
 
-// ─── Template engine (cached environment) ────────────────────────────────────
 
 /// Cached MiniJinja environment for template rendering.
 /// Re-created on each call in debug mode (live reload), cached in release.
@@ -15,7 +14,6 @@ fn build_env() -> minijinja::Environment<'static> {
     env.set_loader(minijinja::path_loader(
         &crate::state::config().templates_dir,
     ));
-    // Enable useful built-ins
     env.set_undefined_behavior(minijinja::UndefinedBehavior::Chainable);
     crate::template_filters::register(&mut env);
     env
@@ -68,7 +66,6 @@ pub fn render_or_500(template_name: &str, context: serde_json::Value) -> Respons
     }
 }
 
-// ─── JSON responses ───────────────────────────────────────────────────────────
 
 /// Respond with a JSON body (200 OK).
 pub fn json_response(data: serde_json::Value) -> Response {
@@ -130,14 +127,12 @@ pub fn rate_limited() -> Response {
     )
 }
 
-// ─── Error helpers ────────────────────────────────────────────────────────────
 
 /// Create a 404 Not Found RangoError.
 pub fn http_404(message: &str) -> RangoError {
     RangoError::NotFound(message.to_string())
 }
 
-// ─── Redirects ────────────────────────────────────────────────────────────────
 
 /// Redirect to a URL (302 Found).
 pub fn redirect(url: &str) -> Response {
@@ -167,7 +162,6 @@ pub fn redirect_see_other(url: &str) -> Response {
         .into_response()
 }
 
-// ─── Text / HTML responses ────────────────────────────────────────────────────
 
 /// Respond with plain text HTML content (200 OK).
 pub fn text_response(content: &str) -> Response {

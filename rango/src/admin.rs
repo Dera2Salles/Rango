@@ -32,15 +32,12 @@ fn default_admin_per_page() -> u64 {
     25
 }
 
-// ─── Environment ─────────────────────────────────────────────────────────────
 
 static ADMIN_ENV: std::sync::OnceLock<minijinja::Environment<'static>> = std::sync::OnceLock::new();
 
 fn get_admin_env() -> &'static minijinja::Environment<'static> {
     ADMIN_ENV.get_or_init(|| {
         let mut env = minijinja::Environment::new();
-        // Ces unwrap sont acceptables : les templates sont embedded dans le binaire
-        // via include_str!, donc un échec ici = bug de développement, pas runtime.
         env.add_template("admin_base.html", include_str!("templates/admin_base.html"))
             .unwrap();
         env.add_template(
@@ -63,7 +60,6 @@ fn get_admin_env() -> &'static minijinja::Environment<'static> {
     })
 }
 
-// Helper : rendu d'un template avec gestion d'erreur propre
 fn render_admin(template_name: &str, ctx: serde_json::Value) -> Result<Html<String>, RangoError> {
     let env = get_admin_env();
     let tmpl = env
@@ -83,7 +79,6 @@ fn get_sidebar_context(admin: &RangoAdmin) -> Vec<String> {
         .collect()
 }
 
-// ─── RangoAdmin Site Registrar ───────────────────────────────────────────────
 
 #[derive(Clone)]
 pub struct RangoAdmin {
@@ -128,7 +123,6 @@ impl Default for RangoAdmin {
     }
 }
 
-// ─── Admin Handlers ──────────────────────────────────────────────────────────
 
 async fn admin_dashboard(State(admin): State<Arc<RangoAdmin>>) -> impl IntoResponse {
     let mut model_summaries = Vec::new();

@@ -26,7 +26,6 @@ const USER_DATA_KEY: &str = "rango_user_data";
 /// Log in a user by storing their ID in the session.
 #[cfg(feature = "auth")]
 pub async fn login(session: &Session, user_id: i64) -> Result<(), RangoError> {
-    // Rotate the session ID on login to prevent session fixation attacks.
     session.cycle_id().await.map_err(|e| RangoError::Internal(e.to_string()))?;
     session
         .insert(USER_ID_KEY, user_id)
@@ -102,7 +101,6 @@ pub async fn is_authenticated(session: &Session) -> bool {
 #[cfg(feature = "auth")]
 pub fn hash_password(password: &str) -> Result<String, RangoError> {
     let salt = SaltString::generate(&mut OsRng);
-    // OWASP recommended Argon2id parameters
     let params = Params::new(65536, 2, 1, None)
         .map_err(|e| RangoError::Internal(e.to_string()))?;
     let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);

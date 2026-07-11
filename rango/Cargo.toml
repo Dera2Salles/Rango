@@ -21,7 +21,7 @@ auth = ["tower-sessions", "argon2", "rand", "subtle", "hex"]
 rango_macros = { version = "0.1.0", path = "../macros" }
 
 axum = { version = "0.7", features = ["macros"] }
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.52", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
@@ -32,10 +32,10 @@ tower = { version = "0.4", features = ["full"] }
 tower-http = { version = "0.5", features = ["fs", "cors", "trace"] }
 
 # Templates (optional)
-minijinja = { version = "2.0", features = ["loader", "json"], optional = true }
+minijinja = { version = "2.21", features = ["loader", "json"], optional = true }
 
 # Database (optional — supports SQLite, PostgreSQL, MySQL/MariaDB)
-sqlx = { version = "0.7", features = [
+sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls",
     "sqlite",
     "postgres",
@@ -54,10 +54,10 @@ argon2 = { version = "0.5", optional = true }
 rand = { version = "0.8", optional = true }
 
 # Security — constant-time comparison for CSRF tokens
-subtle = { version = "2.5", optional = true }
+subtle = { version = "2.6", optional = true }
 
 # Hex encoding for CSRF tokens and random token generation
 hex = { version = "0.4", optional = true }
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["full", "test-util"] }
+tokio = { version = "1.52", features = ["full", "test-util"] }

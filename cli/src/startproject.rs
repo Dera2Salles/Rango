@@ -14,11 +14,11 @@ pub fn startproject(name: &str) -> Result<(), RangoCliError> {
     let cargo_toml = format!(
         r#"[package]
 name = "{}"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-rango = {{ version = "0.1.0", package = "rango-framework", features = ["db", "templates, auth"] }}
+rango = {{ version = "0.1.1", package = "rango-framework", features = ["db", "templates, auth"] }}
 serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
 sqlx = {{ version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "any", "migrate"] }}

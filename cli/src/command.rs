@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(name = "rango")]
 #[command(about = "🤠 Rango CLI — Framework Django-like for Rust")]
-#[command(version = "0.1.0")]
+#[command(version = "0.1.1")]
 pub struct Cli {
     #[command(subcommand)]
     pub(crate) command: Commands,

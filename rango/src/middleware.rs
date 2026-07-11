@@ -10,7 +10,6 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 use tracing::info;
 
-// ─── Logger ───────────────────────────────────────────────────────────────────
 
 pub async fn logger_middleware(req: Request, next: Next) -> Response {
     let method = req.method().clone();
@@ -33,7 +32,6 @@ pub async fn logger_middleware(req: Request, next: Next) -> Response {
     response
 }
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
 
 /// CORS layer that allows all origins.
 ///
@@ -71,13 +69,11 @@ pub fn cors_layer_for(origins: Vec<&'static str>) -> CorsLayer {
         .allow_origin(origins)
 }
 
-// ─── Static files ─────────────────────────────────────────────────────────────
 
 pub fn static_files_service(dir: &str) -> ServeDir {
     ServeDir::new(dir)
 }
 
-// ─── Security Headers ─────────────────────────────────────────────────────────
 
 /// Add security headers to every response.
 ///
@@ -129,7 +125,6 @@ pub async fn security_headers_middleware(req: Request, next: Next) -> Response {
     response
 }
 
-// ─── Host Validation ──────────────────────────────────────────────────────────
 
 /// Validate the `Host` header against `RangoConfig.allowed_hosts`.
 ///
@@ -138,7 +133,6 @@ pub async fn security_headers_middleware(req: Request, next: Next) -> Response {
 pub async fn host_validation_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
     let allowed = &crate::state::config().allowed_hosts;
 
-    // Skip if allowed_hosts is empty or contains "*"
     if allowed.is_empty() || allowed.iter().any(|h| h == "*") {
         return Ok(next.run(req).await);
     }
@@ -147,7 +141,6 @@ pub async fn host_validation_middleware(req: Request, next: Next) -> Result<Resp
         .headers()
         .get(axum::http::header::HOST)
         .and_then(|v| v.to_str().ok())
-        // Strip port if present
         .map(|h| h.split(':').next().unwrap_or(h));
 
     match host {
@@ -159,7 +152,6 @@ pub async fn host_validation_middleware(req: Request, next: Next) -> Result<Resp
     }
 }
 
-// ─── Auth middleware ──────────────────────────────────────────────────────────
 
 #[cfg(not(feature = "auth"))]
 pub async fn require_auth(req: Request, next: Next) -> Result<Response, StatusCode> {
@@ -187,7 +179,6 @@ pub async fn require_auth(
     }
 }
 
-// ─── CSRF middleware ──────────────────────────────────────────────────────────
 
 /// Validate CSRF token on state-mutating requests (POST, PUT, DELETE, PATCH).
 ///
@@ -222,7 +213,6 @@ pub async fn csrf_middleware(
     Ok(next.run(req).await)
 }
 
-// ─── Rate limiter (token bucket) ──────────────────────────────────────────────
 
 /// Simple in-memory rate limiter state.
 ///
@@ -260,7 +250,6 @@ impl RateLimiter {
         match store.get_mut(key) {
             Some((count, start)) => {
                 if now.duration_since(*start) > window {
-                    // Reset window
                     *count = 1;
                     *start = now;
                     true
@@ -302,8 +291,6 @@ pub fn rate_limit_middleware(
                     req.extensions()
                         .get::<axum::extract::ConnectInfo<std::net::SocketAddr>>()
                         .map(|ci| {
-                            // Return a static str is not possible; use leak for simplicity
-                            // In production, store the IP differently
                             let _ = ci.0.ip().to_string();
                             "unknown"
                         })

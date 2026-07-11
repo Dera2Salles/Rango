@@ -55,12 +55,9 @@ pub async fn regenerate_csrf_token(session: &Session) -> Result<String, RangoErr
 #[cfg(feature = "auth")]
 pub async fn validate_csrf(session: &Session, token: &str) -> bool {
     if let Ok(Some(expected)) = session.get::<String>(CSRF_KEY).await {
-        // Constant-time comparison prevents timing attacks
         use subtle::ConstantTimeEq;
         let expected_bytes = expected.as_bytes();
         let token_bytes = token.as_bytes();
-        // Length must match first (short-circuit on length difference is acceptable
-        // since the attacker already knows the token length from the HTML source)
         if expected_bytes.len() == token_bytes.len() {
             return expected_bytes.ct_eq(token_bytes).into();
         }

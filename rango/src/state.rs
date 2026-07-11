@@ -360,7 +360,7 @@ impl Default for SecurityConfig {
         SecurityConfig {
             content_type_nosniff: true,
             x_frame_options: true,
-            hsts_max_age: None, // Disabled by default; enable in prod
+            hsts_max_age: None, 
             csp: None,
             xss_protection: true,
             referrer_policy: true,
@@ -509,7 +509,6 @@ static RANGO_CONFIG: OnceLock<RangoConfig> = OnceLock::new();
 /// Initialize the global config. Call once before `rango::start()`.
 /// Panics if called more than once.
 pub fn init_config(config: RangoConfig) {
-    // Print security warnings
     for warning in config.validate() {
         eprintln!("{}", warning);
     }

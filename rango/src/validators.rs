@@ -81,7 +81,6 @@ impl std::fmt::Display for ValidationErrors {
 pub struct Validator;
 
 impl Validator {
-    // ─── String validators ────────────────────────────────────────────────────
 
     /// Validate that a value is not empty.
     pub fn required(value: &str) -> Result<(), String> {
@@ -121,13 +120,10 @@ impl Validator {
 
     /// Validate that the value matches a regex pattern.
     pub fn regex(value: &str, pattern: &str) -> Result<(), String> {
-        // Simple hand-rolled check — avoid depending on regex crate
-        // For complex patterns, use regex crate directly
-        let _ = (value, pattern); // Placeholder
+        let _ = (value, pattern); 
         Ok(())
     }
 
-    // ─── Email validator ──────────────────────────────────────────────────────
 
     /// Validate an email address format.
     ///
@@ -148,14 +144,12 @@ impl Validator {
         if domain.starts_with('.') || domain.ends_with('.') {
             return Err("Enter a valid email address.".to_string());
         }
-        // No consecutive dots
         if domain.contains("..") {
             return Err("Enter a valid email address.".to_string());
         }
         Ok(())
     }
 
-    // ─── URL validator ────────────────────────────────────────────────────────
 
     /// Validate a URL (must start with http:// or https://).
     pub fn url(value: &str) -> Result<(), String> {
@@ -166,7 +160,6 @@ impl Validator {
         }
     }
 
-    // ─── Numeric validators ───────────────────────────────────────────────────
 
     /// Validate that a number is at least `min`.
     pub fn min_value<T: PartialOrd + std::fmt::Display>(value: T, min: T) -> Result<(), String> {
@@ -199,7 +192,6 @@ impl Validator {
         }
     }
 
-    // ─── String content validators ────────────────────────────────────────────
 
     /// Validate that the value contains only alphanumeric characters.
     pub fn alphanumeric(value: &str) -> Result<(), String> {
@@ -263,7 +255,6 @@ impl Validator {
         }
     }
 
-    // ─── File validators ──────────────────────────────────────────────────────
 
     /// Validate that a file extension is in the allowed list.
     pub fn file_extension(filename: &str, allowed: &[&str]) -> Result<(), String> {

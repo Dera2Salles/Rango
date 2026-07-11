@@ -19,7 +19,6 @@ static DB_POOL: OnceLock<Pool<sqlx::Any>> = OnceLock::new();
 #[cfg(feature = "db")]
 static DB_BACKEND: OnceLock<DatabaseBackend> = OnceLock::new();
 
-// ─── Connection ───────────────────────────────────────────────────────────────
 
 /// Initialize the DB pool from a raw URL (low-level, prefer `init_db_with_config`).
 #[cfg(feature = "db")]
@@ -91,7 +90,6 @@ pub fn placeholder(backend: &DatabaseBackend, index: usize) -> String {
     }
 }
 
-// ─── Raw query helpers ────────────────────────────────────────────────────────
 
 /// Execute a raw SQL statement.
 ///
@@ -123,7 +121,6 @@ where
     sqlx::query_as(sql)
 }
 
-// ─── Transactions ─────────────────────────────────────────────────────────────
 
 #[cfg(feature = "db")]
 pub async fn with_transaction<F, T>(f: F) -> crate::RangoResult<T>
@@ -153,7 +150,6 @@ where
     }
 }
 
-// ─── Aggregations ─────────────────────────────────────────────────────────────
 
 /// Run a COUNT/MAX/MIN/SUM that returns an integer.
 ///
@@ -183,7 +179,6 @@ pub async fn aggregate_float(sql: &str) -> crate::RangoResult<Option<f64>> {
     Ok(row.and_then(|(v,)| v))
 }
 
-// ─── Q Object — combinable filter conditions ──────────────────────────────────
 
 /// A composable filter predicate, like Django's `Q()`.
 ///
@@ -311,7 +306,6 @@ impl std::ops::BitOr for Q {
     }
 }
 
-// ─── QuerySet ─────────────────────────────────────────────────────────────────
 
 /// Django-like lazy query builder.
 ///
@@ -378,7 +372,6 @@ where
     ///   .filter_param("age > ?", min_age)
     /// ```
     pub fn filter_param<V: Into<SqlValue>>(mut self, condition: &str, value: V) -> Self {
-        // Normalize ? → $N for Postgres
         let idx = self.params.len() + 1;
         let condition = match backend() {
             Ok(DatabaseBackend::Postgres) => condition.replacen('?', &format!("${}", idx), 1),
@@ -395,7 +388,6 @@ where
         self
     }
 
-    // ─── Typed, safely-parameterized filters (Django `.filter(field=value)` style) ──
 
     /// `WHERE field = value` — value is safely bound, never interpolated.
     pub fn filter_eq<V: Into<SqlValue>>(self, field: &str, value: V) -> Self {
@@ -631,7 +623,6 @@ where
     }
 
     pub async fn last(self) -> crate::RangoResult<Option<T>> {
-        // Reverse the ORDER BY or add "id DESC" if none
         let order = self
             .order_by
             .as_deref()
@@ -755,7 +746,6 @@ where
 
         let params = self.params.clone();
 
-        // Count query
         let mut count_qs = QuerySet::<T>::new(&table);
         count_qs.conditions = conditions.clone();
         count_qs.joins = joins.clone();
@@ -764,7 +754,6 @@ where
         count_qs.params = params.clone();
         let total = count_qs.count().await?;
 
-        // Data query
         let mut data_qs = QuerySet::<T>::new(&table);
         data_qs.conditions = conditions;
         data_qs.joins = joins;
@@ -815,7 +804,6 @@ where
 
     /// Get distinct rows.
     pub fn distinct(mut self) -> Self {
-        // Prepend DISTINCT to select
         let fields = self
             .select_fields
             .take()
@@ -896,7 +884,6 @@ where
     }
 }
 
-// ─── Page (pagination result) ─────────────────────────────────────────────────
 
 /// Result of a paginated query.
 #[cfg(feature = "db")]
@@ -918,7 +905,6 @@ pub struct Page<T> {
     pub num_pages: u64,
 }
 
-// ─── RangoModel trait ─────────────────────────────────────────────────────────
 
 #[cfg(feature = "db")]
 #[::axum::async_trait]
@@ -1117,7 +1103,6 @@ pub trait RangoModel:
     }
 }
 
-// ─── Migrations ───────────────────────────────────────────────────────────────
 
 #[cfg(feature = "db")]
 pub async fn run_migrations(migrations_path: &str) -> Result<(), sqlx::Error> {
@@ -1130,7 +1115,6 @@ pub async fn run_migrations(migrations_path: &str) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-// ─── Schema ───────────────────────────────────────────────────────────────────
 
 #[cfg(feature = "db")]
 #[derive(Debug, Clone)]
@@ -1218,7 +1202,6 @@ pub trait RangoSchema {
     fn generate_index_sql() -> Vec<String>;
 }
 
-// ─── Admin Panel Metadata and Operations ──────────────────────────────────────
 
 #[cfg(feature = "db")]
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
@@ -1333,7 +1316,6 @@ where
     ) -> crate::RangoResult<(Vec<serde_json::Value>, i64)> {
         match query.filter(|q| !q.trim().is_empty()) {
             Some(q) => {
-                // Generic in-memory search (works for any model without extra config).
                 let all = self.search(q).await?;
                 let total = all.len() as i64;
                 let start = ((page.saturating_sub(1)) * per_page) as usize;

@@ -114,14 +114,13 @@ fn build_page_range(current: u64, total: u64, window: u64) -> Vec<i64> {
 
     let mut pages: Vec<i64> = Vec::new();
 
-    // Always show first page
     pages.push(1);
 
     let start = current.saturating_sub(window).max(2);
     let end = (current + window).min(total.saturating_sub(1));
 
     if start > 2 {
-        pages.push(0); // ellipsis
+        pages.push(0); 
     }
 
     for p in start..=end {
@@ -129,10 +128,9 @@ fn build_page_range(current: u64, total: u64, window: u64) -> Vec<i64> {
     }
 
     if end < total.saturating_sub(1) {
-        pages.push(0); // ellipsis
+        pages.push(0); 
     }
 
-    // Always show last page
     if total > 1 {
         pages.push(total as i64);
     }

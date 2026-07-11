@@ -1,10 +1,8 @@
-# Rango 🦀🦎
-
 <p align="center">
     <img src="docs/rango.png" alt="Rango Logo" width="900">
 </p>
 
-> Build blazing-fast web applications with zero compromise on developer velocity.
+> Django's productivity, Rust's performance and safety.
 
 Rango is a lightweight, ergonomic web framework built on top of Axum. It is carefully designed to provide a productive, Django-like development experience in Rust, eliminating boilerplate while maintaining bare-metal performance.
 

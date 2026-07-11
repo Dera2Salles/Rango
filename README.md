@@ -36,9 +36,7 @@ rango_workspace/
 
 ---
 
-## Installation
-
-##  Install the CLI
+### Install the CLI
 
 To use the `rango` command-line tool for scaffolding:
 

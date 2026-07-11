@@ -44,11 +44,11 @@ Add Rango to your `Cargo.toml` dependencies:
 
 ```toml
 [dependencies]
-rango = {{ version = "0.1.0", package = "rango-framework", features = ["db", "templates"] }}
-serde = {{ version = "1.0", features = ["derive"] }}
+rango = { version = "0.1.0", package = "rango-framework", features = ["db", "templates"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-sqlx = {{ version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "any", "migrate"] }}
-tokio = {{ version = "1.0", features = ["full"] }}
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "any", "migrate"] }
+tokio = { version = "1.0", features = ["full"] }
 ```
 
 ### 2. Install the CLI

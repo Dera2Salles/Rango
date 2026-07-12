@@ -17,7 +17,7 @@ Rango is a lightweight, ergonomic web framework built on top of Axum. It is care
 - **Feature-Rich, Easy ORM ️**: A Django-like `QuerySet` with safely-parameterized typed filters (`filter_eq`, `filter_icontains`, `filter_in`, ...), aggregates (`sum`, `avg`, `min_of`, `max_of`), pagination, `get_or_create`/`update_or_create`, bulk operations, and multi-database support (SQLite/PostgreSQL/MySQL) via a single `Any`-backed pool — completely optional and feature-gated.
 - **Auto-Generated Admin Panel 🛠️**: Register a model and get a themed CRUD UI with search, pagination, and bulk delete for free.
 - **Django-style Extras**: Flash messages (`rango::messages`), an in-memory cache (`rango::cache`), signals (`PRE_SAVE`/`POST_SAVE`/...), a `Form`/`Validator` toolkit, and Django-flavored template filters (`pluralize`, `intcomma`, `truncatewords`, `yesno`, ...).
-- **Ergonomic Contexts **: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
+- **Ergonomic Contexts**: Create view contexts instantly with the `context!` macro for seamless JSON payloads and template rendering.
 - **Blazing Fast Compilation 🚀**: Highly modular design. If you don't use the database or templates, they aren't compiled. Keep your binary lightweight.
 
 📖 See the [full documentation](docs/README.md) for details on every feature above.
